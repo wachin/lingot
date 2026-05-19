@@ -167,6 +167,12 @@ The module entry point remains available for development:
 python3 -m pyqt6_lingot
 ```
 
+A manual page is installed for the launcher:
+
+```console
+man lingot-pyqt6
+```
+
 Current PyQt6 status:
 
 * Main window with gauge, strobe disc, spectrum view, menus, and live polling

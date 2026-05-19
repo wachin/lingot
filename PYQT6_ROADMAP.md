@@ -324,6 +324,8 @@ Recommended transition:
 - Add new `lingot-pyqt6` executable. [x]
 - Rename/switch default only after parity testing.
 
+[x] Add manual page for the experimental `lingot-pyqt6` executable.
+
 [ ] Reuse existing app metadata and icon.
 
 Files:

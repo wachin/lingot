@@ -1,0 +1,52 @@
+.TH LINGOT-PYQT6 1 "May 19, 2026"
+.\"
+.SH NAME
+lingot-pyqt6 \- experimental PyQt6 frontend for Lingot
+.\"
+.SH SYNOPSIS
+.B lingot-pyqt6
+.RB [\| \-\c
+.IR config \|]
+.\"
+.SH DESCRIPTION
+.B lingot-pyqt6
+is an experimental PyQt6 frontend for
+.BR lingot ,
+an accurate and easy to use musical instrument tuner.
+.PP
+The frontend reuses Lingot's existing C engine for audio capture, pitch
+detection, FFT analysis, configuration files, UI settings, and Scala scale
+support.
+.PP
+The stable GTK frontend remains available as
+.BR lingot .
+.\"
+.SH OPTIONS
+.TP
+.BI \-c\  config
+Use
+.I ~/.config/lingot/config.conf
+instead of the default
+.IR ~/.config/lingot/lingot.conf .
+.TP
+.B \-h, \-\-help
+Show command-line help and exit.
+.\"
+.SH ENVIRONMENT
+.TP
+.B LINGOT_LIBRARY_PATH
+Path to the
+.I liblingot.so
+shared library to load. This is useful when running from a build tree, for
+example:
+.IP
+.B LINGOT_LIBRARY_PATH=$PWD/.libs/liblingot.so lingot-pyqt6
+.\"
+.SH AUTHOR
+.B Lingot
+was written by
+.B Iban Cereijo
+<\&ibancg@gmail.com\&>
+and
+.B Jairo Chapela
+<\&jairochapela@gmail.com\&>.

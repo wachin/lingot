@@ -125,7 +125,7 @@ lingot_LDADD  =              $(liblingot_rdep_libs)   $(GTK_LIBS)   $(JSON_LIBS)
 ######################################################################
 # 11 building documentation
 
-dist_man_MANS = lingot.1
+dist_man_MANS = lingot.1 lingot-pyqt6.1
 
 ######################################################################
 # 12 what gets installed
