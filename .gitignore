@@ -65,4 +65,4 @@ po/*.header
 po/Rules-quot
 po/Makevars.template
 po/@*
-
+py-compile

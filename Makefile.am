@@ -29,6 +29,7 @@ AM_LDFLAGS = -pthread -Wl,--as-needed
 AM_CFLAGS = -pthread -Wall -Wextra -pedantic -Wno-overlength-strings
 
 bin_PROGRAMS = lingot
+bin_SCRIPTS = lingot-pyqt6
 
 lib_LTLIBRARIES = liblingot.la
 liblingot_la_SOURCES = \
@@ -147,6 +148,22 @@ dist_gnomemenu_DATA = org.nongnu.lingot.desktop
 appdatadir = $(datadir)/metainfo
 dist_appdata_DATA = org.nongnu.lingot.appdata.xml
 
+pyqt6_lingotdir = $(pythondir)/pyqt6_lingot
+dist_pyqt6_lingot_PYTHON = \
+  pyqt6_lingot/__init__.py \
+  pyqt6_lingot/__main__.py \
+  pyqt6_lingot/app.py \
+  pyqt6_lingot/bindings.py \
+  pyqt6_lingot/config_dialog.py \
+  pyqt6_lingot/main_window.py
+
+pyqt6_lingot_widgetsdir = $(pythondir)/pyqt6_lingot/widgets
+dist_pyqt6_lingot_widgets_PYTHON = \
+  pyqt6_lingot/widgets/__init__.py \
+  pyqt6_lingot/widgets/gauge.py \
+  pyqt6_lingot/widgets/spectrum.py \
+  pyqt6_lingot/widgets/strobe_disc.py
+
 # Install to architecture-dependent directory. Do not distribute.
 pkgexecconfigdir = $(libdir)/pkgconfig
 pkgexecconfig_DATA = lingot.pc
@@ -207,6 +224,7 @@ MAINTAINERCLEANFILES = \
 # useful to users of the tarball
 EXTRA_DIST = \
   bootstrap \
+  lingot-pyqt6 \
   lingot.pc.in \
   test/resources/lingot-001.conf \
   test/resources/lingot-0_9_2b8.conf \

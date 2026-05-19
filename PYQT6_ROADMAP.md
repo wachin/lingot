@@ -309,19 +309,19 @@ Recommended: use Python gettext first, because the repository already has gettex
 
 ## Phase 7: Packaging And Desktop Integration
 
-[ ] Add a runnable development entry point.
+[x] Add a runnable development entry point.
 
 Examples:
 
 - `python -m pyqt6_lingot`
 - `lingot-pyqt6`
 
-[ ] Update install rules without removing the GTK executable immediately.
+[x] Update install rules without removing the GTK executable immediately.
 
 Recommended transition:
 
-- Build old `lingot` GTK app as before.
-- Add new `lingot-pyqt6` executable.
+- Build old `lingot` GTK app as before. [x]
+- Add new `lingot-pyqt6` executable. [x]
 - Rename/switch default only after parity testing.
 
 [ ] Reuse existing app metadata and icon.
@@ -332,7 +332,7 @@ Files:
 - `org.nongnu.lingot.desktop`
 - `org.nongnu.lingot.appdata.xml`
 
-[ ] Document development setup.
+[x] Document development setup.
 
 Include:
 

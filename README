@@ -146,19 +146,25 @@ make
 Then run the PyQt6 frontend from the source tree:
 
 ```console
-python3 -m pyqt6_lingot
+./lingot-pyqt6
 ```
 
 If the local shared library cannot be found, point the frontend at it:
 
 ```console
-LINGOT_LIBRARY_PATH=$PWD/.libs/liblingot.so python3 -m pyqt6_lingot
+LINGOT_LIBRARY_PATH=$PWD/.libs/liblingot.so ./lingot-pyqt6
 ```
 
 The PyQt6 frontend supports the same configuration-name option:
 
 ```console
-python3 -m pyqt6_lingot -c bass
+./lingot-pyqt6 -c bass
+```
+
+The module entry point remains available for development:
+
+```console
+python3 -m pyqt6_lingot
 ```
 
 Current PyQt6 status:
