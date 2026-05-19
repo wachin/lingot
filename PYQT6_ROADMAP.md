@@ -217,7 +217,7 @@ Source reference: `src/lingot-gui-gauge.c`.
 
 Source reference: `src/lingot-gui-spectrum.c`.
 
-[ ] Port strobe disc drawing from Cairo/GTK to `QPainter`.
+[x] Port strobe disc drawing from Cairo/GTK to `QPainter`.
 
 Source reference: `src/lingot-gui-strobe-disc.c`.
 

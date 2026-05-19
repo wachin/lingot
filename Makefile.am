@@ -169,6 +169,9 @@ dist_pyqt6_lingot_widgets_PYTHON = \
   pyqt6_lingot/widgets/spectrum.py \
   pyqt6_lingot/widgets/strobe_disc.py
 
+pyqt6_lingot_assetsdir = $(pythondir)/pyqt6_lingot/assets
+dist_pyqt6_lingot_assets_DATA = src/lingot-strobe.png
+
 # Install to architecture-dependent directory. Do not distribute.
 pkgexecconfigdir = $(libdir)/pkgconfig
 pkgexecconfig_DATA = lingot.pc
