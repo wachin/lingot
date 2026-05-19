@@ -53,6 +53,8 @@ class UiSettings(ctypes.Structure):
         ("gauge_visible", ctypes.c_int),
         ("win_width", ctypes.c_int),
         ("win_height", ctypes.c_int),
+        ("config_dialog_width", ctypes.c_int),
+        ("config_dialog_height", ctypes.c_int),
         ("horizontal_paned_pos", ctypes.c_int),
         ("vertical_paned_pos", ctypes.c_int),
         ("visualization_rate", ctypes.c_double),

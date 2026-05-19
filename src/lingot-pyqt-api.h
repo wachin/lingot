@@ -50,6 +50,8 @@ typedef struct {
     int gauge_visible;
     int win_width;
     int win_height;
+    int config_dialog_width;
+    int config_dialog_height;
     int horizontal_paned_pos;
     int vertical_paned_pos;
     LINGOT_FLT visualization_rate;

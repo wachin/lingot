@@ -273,7 +273,7 @@ class MainWindow(QMainWindow):
         if self.context is None:
             QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
             return
-        dialog = ConfigDialog(self.context, self)
+        dialog = ConfigDialog(self.context, self, ui_settings=self.ui_settings)
         dialog.exec()
 
     def _about(self) -> None:

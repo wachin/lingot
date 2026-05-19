@@ -548,6 +548,8 @@ int lingot_pyqt_get_ui_settings(lingot_pyqt_ui_settings_t* settings) {
     settings->gauge_visible = ui_settings.gauge_visible;
     settings->win_width = ui_settings.win_width;
     settings->win_height = ui_settings.win_height;
+    settings->config_dialog_width = ui_settings.config_dialog_width;
+    settings->config_dialog_height = ui_settings.config_dialog_height;
     settings->horizontal_paned_pos = ui_settings.horizontal_paned_pos;
     settings->vertical_paned_pos = ui_settings.vertical_paned_pos;
     settings->visualization_rate = ui_settings.visualization_rate;
@@ -564,6 +566,8 @@ int lingot_pyqt_set_ui_settings(const lingot_pyqt_ui_settings_t* settings) {
     ui_settings.gauge_visible = settings->gauge_visible;
     ui_settings.win_width = settings->win_width;
     ui_settings.win_height = settings->win_height;
+    ui_settings.config_dialog_width = settings->config_dialog_width;
+    ui_settings.config_dialog_height = settings->config_dialog_height;
     ui_settings.horizontal_paned_pos = settings->horizontal_paned_pos;
     ui_settings.vertical_paned_pos = settings->vertical_paned_pos;
     ui_settings.visualization_rate = settings->visualization_rate;

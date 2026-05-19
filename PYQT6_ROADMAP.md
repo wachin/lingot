@@ -187,6 +187,8 @@ The first PyQt6 version can either:
 
 Implemented: reuse the existing settings file through the wrapper API to avoid behavior drift.
 
+[x] Persist PyQt6 preferences dialog size through the existing UI settings file.
+
 [x] Port runtime timers with `QTimer`.
 
 Required timers:

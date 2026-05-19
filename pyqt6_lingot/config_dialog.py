@@ -20,13 +20,19 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .bindings import ConfigValues, LingotContext, LingotLibraryError, Scale, ScaleNote
+from .bindings import ConfigValues, LingotContext, LingotLibraryError, Scale, ScaleNote, UiSettings
 
 
 class ConfigDialog(QDialog):
-    def __init__(self, context: LingotContext, parent=None) -> None:
+    def __init__(
+        self,
+        context: LingotContext,
+        parent=None,
+        ui_settings: UiSettings | None = None,
+    ) -> None:
         super().__init__(parent)
         self.context = context
+        self.ui_settings = ui_settings
         self.setWindowTitle("Preferences")
         self.setMinimumWidth(420)
 
@@ -35,6 +41,7 @@ class ConfigDialog(QDialog):
         self._context_scale_changed_during_dialog = False
         self._build_ui()
         self._load_values(self.values)
+        self._restore_ui_settings()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -56,6 +63,15 @@ class ConfigDialog(QDialog):
         if apply_button is not None:
             apply_button.clicked.connect(self._apply)
         root.addWidget(buttons)
+
+    def _restore_ui_settings(self) -> None:
+        if self.ui_settings is None:
+            return
+        if self.ui_settings.config_dialog_width > 0 and self.ui_settings.config_dialog_height > 0:
+            self.resize(
+                self.ui_settings.config_dialog_width,
+                self.ui_settings.config_dialog_height,
+            )
 
     def _build_input_tab(self) -> QWidget:
         page = QWidget()
@@ -324,3 +340,16 @@ class ConfigDialog(QDialog):
             except LingotLibraryError:
                 pass
         super().reject()
+
+    def _save_ui_settings(self) -> None:
+        if self.ui_settings is not None:
+            self.ui_settings.config_dialog_width = self.width()
+            self.ui_settings.config_dialog_height = self.height()
+
+    def done(self, result: int) -> None:
+        self._save_ui_settings()
+        super().done(result)
+
+    def closeEvent(self, event) -> None:  # noqa: N802 - Qt override name
+        self._save_ui_settings()
+        super().closeEvent(event)
