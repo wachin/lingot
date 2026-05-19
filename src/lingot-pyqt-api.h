@@ -58,6 +58,11 @@ int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
                                           lingot_pyqt_config_values_t* values);
 int lingot_pyqt_context_set_config_values(lingot_pyqt_context_t* context,
                                           const lingot_pyqt_config_values_t* values);
+int lingot_pyqt_context_get_audio_device(lingot_pyqt_context_t* context,
+                                         char* dst,
+                                         unsigned int dst_len);
+int lingot_pyqt_context_set_audio_device(lingot_pyqt_context_t* context,
+                                         const char* device);
 
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context);
 void lingot_pyqt_context_stop(lingot_pyqt_context_t* context);
@@ -73,6 +78,14 @@ int lingot_pyqt_pop_message(char* dst,
                             unsigned int dst_len,
                             lingot_msg_type_t* type,
                             int* error_code);
+
+int lingot_pyqt_audio_system_count(void);
+const char* lingot_pyqt_audio_system_name(int index);
+int lingot_pyqt_audio_system_device_count(int audio_system_index);
+int lingot_pyqt_audio_system_device_name(int audio_system_index,
+                                         int device_index,
+                                         char* dst,
+                                         unsigned int dst_len);
 
 const char* lingot_pyqt_config_filename(void);
 const char* lingot_pyqt_ui_settings_filename(void);

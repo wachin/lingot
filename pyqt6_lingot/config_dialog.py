@@ -30,6 +30,7 @@ class ConfigDialog(QDialog):
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
         tabs = QTabWidget()
+        tabs.addTab(self._build_input_tab(), "Input")
         tabs.addTab(self._build_algorithm_tab(), "Algorithm")
         tabs.addTab(self._build_frequency_tab(), "Frequency")
         root.addWidget(tabs)
@@ -45,6 +46,22 @@ class ConfigDialog(QDialog):
         if apply_button is not None:
             apply_button.clicked.connect(self._apply)
         root.addWidget(buttons)
+
+    def _build_input_tab(self) -> QWidget:
+        page = QWidget()
+        form = QFormLayout(page)
+
+        self.audio_system = QComboBox()
+        for index, name in self.context.audio_systems():
+            self.audio_system.addItem(name, index)
+        self.audio_system.currentIndexChanged.connect(self._refresh_audio_devices)
+
+        self.audio_device = QComboBox()
+        self.audio_device.setEditable(True)
+
+        form.addRow("Audio system", self.audio_system)
+        form.addRow("Device", self.audio_device)
+        return page
 
     def _build_algorithm_tab(self) -> QWidget:
         page = QWidget()
@@ -109,6 +126,16 @@ class ConfigDialog(QDialog):
         return page
 
     def _load_values(self, values: ConfigValues) -> None:
+        system_index = self.audio_system.findData(values.audio_system_index)
+        self.audio_system.setCurrentIndex(max(0, system_index))
+        self._refresh_audio_devices()
+        current_device = self.context.audio_device()
+        device_index = self.audio_device.findText(current_device)
+        if device_index >= 0:
+            self.audio_device.setCurrentIndex(device_index)
+        else:
+            self.audio_device.setEditText(current_device)
+
         fft_index = self.fft_size.findData(values.fft_size)
         self.fft_size.setCurrentIndex(max(0, fft_index))
         self.temporal_window.setValue(values.temporal_window)
@@ -119,9 +146,24 @@ class ConfigDialog(QDialog):
         self.root_frequency_error.setValue(values.root_frequency_error)
         self.optimize_parameters.setChecked(bool(values.optimize_internal_parameters))
 
+    def _refresh_audio_devices(self) -> None:
+        previous = self.audio_device.currentText() if hasattr(self, "audio_device") else ""
+        self.audio_device.clear()
+        system_index = self.audio_system.currentData()
+        if system_index is None:
+            return
+        for device in self.context.audio_devices(int(system_index)):
+            self.audio_device.addItem(device)
+        if previous:
+            index = self.audio_device.findText(previous)
+            if index >= 0:
+                self.audio_device.setCurrentIndex(index)
+            else:
+                self.audio_device.setEditText(previous)
+
     def _collect_values(self) -> ConfigValues:
         values = ConfigValues()
-        values.audio_system_index = self.values.audio_system_index
+        values.audio_system_index = int(self.audio_system.currentData() or 0)
         values.fft_size = int(self.fft_size.currentData())
         values.temporal_window = self.temporal_window.value()
         values.min_overall_snr = self.noise_threshold.value()
@@ -142,7 +184,9 @@ class ConfigDialog(QDialog):
             return False
 
         try:
-            self.context.set_config_values(self._collect_values())
+            values = self._collect_values()
+            self.context.set_config_values(values)
+            self.context.set_audio_device(self.audio_device.currentText())
             self.context.restart()
             self.values = self.context.config_values()
         except LingotLibraryError as exc:

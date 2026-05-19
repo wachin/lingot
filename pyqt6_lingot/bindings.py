@@ -107,6 +107,19 @@ class LingotBindings:
         ]
         self.lib.lingot_pyqt_context_set_config_values.restype = ctypes.c_int
 
+        self.lib.lingot_pyqt_context_get_audio_device.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+        ]
+        self.lib.lingot_pyqt_context_get_audio_device.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_set_audio_device.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+        ]
+        self.lib.lingot_pyqt_context_set_audio_device.restype = ctypes.c_int
+
         self.lib.lingot_pyqt_context_start.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_start.restype = ctypes.c_int
 
@@ -137,6 +150,23 @@ class LingotBindings:
         ]
         self.lib.lingot_pyqt_pop_message.restype = ctypes.c_int
 
+        self.lib.lingot_pyqt_audio_system_count.argtypes = []
+        self.lib.lingot_pyqt_audio_system_count.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_audio_system_name.argtypes = [ctypes.c_int]
+        self.lib.lingot_pyqt_audio_system_name.restype = ctypes.c_char_p
+
+        self.lib.lingot_pyqt_audio_system_device_count.argtypes = [ctypes.c_int]
+        self.lib.lingot_pyqt_audio_system_device_count.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_audio_system_device_name.argtypes = [
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+        ]
+        self.lib.lingot_pyqt_audio_system_device_name.restype = ctypes.c_int
+
         self.lib.lingot_pyqt_config_filename.argtypes = []
         self.lib.lingot_pyqt_config_filename.restype = ctypes.c_char_p
 
@@ -148,6 +178,26 @@ class LingotBindings:
     def config_filename(self) -> str:
         raw = self.lib.lingot_pyqt_config_filename()
         return raw.decode("utf-8", errors="replace") if raw else ""
+
+    def audio_systems(self) -> list[tuple[int, str]]:
+        systems: list[tuple[int, str]] = []
+        for index in range(max(0, self.lib.lingot_pyqt_audio_system_count())):
+            raw = self.lib.lingot_pyqt_audio_system_name(index)
+            if raw:
+                systems.append((index, raw.decode("utf-8", errors="replace")))
+        return systems
+
+    def audio_devices(self, audio_system_index: int) -> list[str]:
+        devices: list[str] = []
+        count = max(0, self.lib.lingot_pyqt_audio_system_device_count(audio_system_index))
+        for index in range(count):
+            text = ctypes.create_string_buffer(512)
+            result = self.lib.lingot_pyqt_audio_system_device_name(
+                audio_system_index, index, text, len(text)
+            )
+            if result == 0:
+                devices.append(text.value.decode("utf-8", errors="replace"))
+        return devices
 
 
 class LingotContext:
@@ -227,6 +277,32 @@ class LingotContext:
         )
         if result != 0:
             raise LingotLibraryError("Configuration values are invalid")
+
+    def audio_systems(self) -> list[tuple[int, str]]:
+        return self.bindings.audio_systems()
+
+    def audio_devices(self, audio_system_index: int) -> list[str]:
+        return self.bindings.audio_devices(audio_system_index)
+
+    def audio_device(self) -> str:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        text = ctypes.create_string_buffer(512)
+        result = self.bindings.lib.lingot_pyqt_context_get_audio_device(
+            self._ptr, text, len(text)
+        )
+        if result != 0:
+            return ""
+        return text.value.decode("utf-8", errors="replace")
+
+    def set_audio_device(self, device: str) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_set_audio_device(
+            self._ptr, device.encode("utf-8")
+        )
+        if result != 0:
+            raise LingotLibraryError("Audio device is invalid")
 
     def pop_message(self) -> tuple[int, int, str] | None:
         text = ctypes.create_string_buffer(1001)

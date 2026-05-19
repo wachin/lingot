@@ -27,6 +27,7 @@
 #include "lingot-audio-jack.h"
 #include "lingot-audio-oss.h"
 #include "lingot-audio-pulseaudio.h"
+#include "lingot-audio.h"
 #include "lingot-config-scale.h"
 #include "lingot-config.h"
 #include "lingot-core.h"
@@ -191,6 +192,35 @@ int lingot_pyqt_context_set_config_values(lingot_pyqt_context_t* context,
     return 0;
 }
 
+int lingot_pyqt_context_get_audio_device(lingot_pyqt_context_t* context,
+                                         char* dst,
+                                         unsigned int dst_len) {
+    if (!context || !dst || dst_len == 0) {
+        return -1;
+    }
+    const int index = context->conf.audio_system_index;
+    if (index < 0 || index >= N_MAX_AUDIO_DEV) {
+        dst[0] = '\0';
+        return -1;
+    }
+    snprintf(dst, dst_len, "%s", context->conf.audio_dev[index]);
+    return 0;
+}
+
+int lingot_pyqt_context_set_audio_device(lingot_pyqt_context_t* context,
+                                         const char* device) {
+    if (!context || !device) {
+        return -1;
+    }
+    const int index = context->conf.audio_system_index;
+    if (index < 0 || index >= N_MAX_AUDIO_DEV) {
+        return -1;
+    }
+    snprintf(context->conf.audio_dev[index], sizeof(context->conf.audio_dev[index]),
+             "%s", device);
+    return 0;
+}
+
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context) {
     if (!context) {
         return -1;
@@ -303,6 +333,52 @@ int lingot_pyqt_pop_message(char* dst,
 
     buff[LINGOT_MSG_MAX_SIZE] = '\0';
     snprintf(dst, dst_len, "%s", buff);
+    return result;
+}
+
+int lingot_pyqt_audio_system_count(void) {
+    return lingot_audio_system_get_count();
+}
+
+const char* lingot_pyqt_audio_system_name(int index) {
+    return lingot_audio_system_get_name(index);
+}
+
+int lingot_pyqt_audio_system_device_count(int audio_system_index) {
+    lingot_audio_system_properties_t properties;
+    memset(&properties, 0, sizeof(properties));
+
+    if (lingot_audio_system_get_properties(&properties, audio_system_index) != 0) {
+        return 0;
+    }
+
+    const int count = properties.n_devices;
+    lingot_audio_system_properties_destroy(&properties);
+    return count;
+}
+
+int lingot_pyqt_audio_system_device_name(int audio_system_index,
+                                         int device_index,
+                                         char* dst,
+                                         unsigned int dst_len) {
+    lingot_audio_system_properties_t properties;
+    int result = -1;
+
+    if (!dst || dst_len == 0 || device_index < 0) {
+        return -1;
+    }
+    dst[0] = '\0';
+    memset(&properties, 0, sizeof(properties));
+
+    if (lingot_audio_system_get_properties(&properties, audio_system_index) != 0) {
+        return -1;
+    }
+
+    if (device_index < properties.n_devices && properties.devices[device_index]) {
+        snprintf(dst, dst_len, "%s", properties.devices[device_index]);
+        result = 0;
+    }
+    lingot_audio_system_properties_destroy(&properties);
     return result;
 }
 

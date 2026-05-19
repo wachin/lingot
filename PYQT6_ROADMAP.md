@@ -252,9 +252,9 @@ PyQt6 widgets:
 
 Required behavior:
 
-- Audio system selection.
-- Audio device selection.
-- Device list refresh when audio system changes.
+- Audio system selection. [x]
+- Audio device selection. [x]
+- Device list refresh when audio system changes. [x]
 
 [ ] Port performance/algorithm settings.
 
