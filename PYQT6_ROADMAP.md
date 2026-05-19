@@ -209,7 +209,7 @@ Required behavior:
 
 ## Phase 4: Port Custom Visual Widgets
 
-[ ] Port gauge drawing from Cairo/GTK to `QPainter`.
+[x] Port gauge drawing from Cairo/GTK to `QPainter`.
 
 Source reference: `src/lingot-gui-gauge.c`.
 
