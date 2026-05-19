@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from .bindings import LingotBindings, LingotContext, LingotLibraryError
 from .main_window import MainWindow
+from .metadata import APP_NAME
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -19,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
 
     app = QApplication(sys.argv[:1])
-    app.setApplicationName("Lingot")
+    app.setApplicationName(APP_NAME)
     app.setDesktopFileName("org.lingot.lingot")
 
     context = None

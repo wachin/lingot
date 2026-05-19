@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction, QActionGroup
+from PyQt6.QtGui import QAction, QActionGroup, QIcon
 from PyQt6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -16,6 +16,16 @@ from PyQt6.QtWidgets import (
 
 from .bindings import LingotBindings, LingotContext, LingotLibraryError, Snapshot, UiSettings
 from .config_dialog import ConfigDialog
+from .metadata import (
+    APP_AUTHORS,
+    APP_BUGTRACKER,
+    APP_COPYRIGHT,
+    APP_DISPLAY_NAME,
+    APP_ICON_PATH,
+    APP_SUMMARY,
+    APP_VERSION,
+    APP_WEBSITE,
+)
 from .widgets.gauge import GaugeWidget
 from .widgets.spectrum import SpectrumWidget
 from .widgets.strobe_disc import StrobeDiscWidget
@@ -38,6 +48,8 @@ class MainWindow(QMainWindow):
         self.show_gauge = True
 
         self.setWindowTitle("Lingot")
+        if APP_ICON_PATH.exists():
+            self.setWindowIcon(QIcon(str(APP_ICON_PATH)))
         self.resize(760, 520)
 
         self.gauge = GaugeWidget()
@@ -279,8 +291,20 @@ class MainWindow(QMainWindow):
     def _about(self) -> None:
         QMessageBox.about(
             self,
-            "About Lingot",
-            "Lingot\nExperimental PyQt6 frontend",
+            f"About {APP_DISPLAY_NAME}",
+            (
+                f"<h3>{APP_DISPLAY_NAME} {APP_VERSION}</h3>"
+                f"<p>{APP_SUMMARY}.</p>"
+                "<p>Lingot is an accurate and easy to use musical instrument tuner. "
+                "This frontend reuses the existing C engine for audio capture, "
+                "pitch detection, FFT analysis, configuration files, UI settings, "
+                "and Scala scale support.</p>"
+                f"<p>{APP_COPYRIGHT}</p>"
+                f"<p>Authors:<br>{'<br>'.join(APP_AUTHORS)}</p>"
+                f"<p><a href=\"{APP_WEBSITE}\">{APP_WEBSITE}</a><br>"
+                f"<a href=\"{APP_BUGTRACKER}\">{APP_BUGTRACKER}</a></p>"
+                "<p>License: GPL-2.0-or-later</p>"
+            ),
         )
 
     def closeEvent(self, event) -> None:  # noqa: N802 - Qt override name

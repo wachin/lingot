@@ -159,7 +159,8 @@ dist_pyqt6_lingot_PYTHON = \
   pyqt6_lingot/app.py \
   pyqt6_lingot/bindings.py \
   pyqt6_lingot/config_dialog.py \
-  pyqt6_lingot/main_window.py
+  pyqt6_lingot/main_window.py \
+  pyqt6_lingot/metadata.py
 
 pyqt6_lingot_widgetsdir = $(pythondir)/pyqt6_lingot/widgets
 dist_pyqt6_lingot_widgets_PYTHON = \
