@@ -47,6 +47,20 @@ class ConfigValues(ctypes.Structure):
     ]
 
 
+class UiSettings(ctypes.Structure):
+    _fields_ = [
+        ("spectrum_visible", ctypes.c_int),
+        ("gauge_visible", ctypes.c_int),
+        ("win_width", ctypes.c_int),
+        ("win_height", ctypes.c_int),
+        ("horizontal_paned_pos", ctypes.c_int),
+        ("vertical_paned_pos", ctypes.c_int),
+        ("visualization_rate", ctypes.c_double),
+        ("error_dispatch_rate", ctypes.c_double),
+        ("gauge_sampling_rate", ctypes.c_double),
+    ]
+
+
 @dataclass
 class ScaleNote:
     name: str
@@ -211,6 +225,15 @@ class LingotBindings:
         ]
         self.lib.lingot_pyqt_pop_message.restype = ctypes.c_int
 
+        self.lib.lingot_pyqt_get_ui_settings.argtypes = [ctypes.POINTER(UiSettings)]
+        self.lib.lingot_pyqt_get_ui_settings.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_set_ui_settings.argtypes = [ctypes.POINTER(UiSettings)]
+        self.lib.lingot_pyqt_set_ui_settings.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_save_ui_settings.argtypes = []
+        self.lib.lingot_pyqt_save_ui_settings.restype = None
+
         self.lib.lingot_pyqt_audio_system_count.argtypes = []
         self.lib.lingot_pyqt_audio_system_count.restype = ctypes.c_int
 
@@ -239,6 +262,19 @@ class LingotBindings:
     def config_filename(self) -> str:
         raw = self.lib.lingot_pyqt_config_filename()
         return raw.decode("utf-8", errors="replace") if raw else ""
+
+    def ui_settings(self) -> UiSettings:
+        settings = UiSettings()
+        if self.lib.lingot_pyqt_get_ui_settings(ctypes.byref(settings)) != 0:
+            raise LingotLibraryError("Could not read UI settings")
+        return settings
+
+    def set_ui_settings(self, settings: UiSettings) -> None:
+        if self.lib.lingot_pyqt_set_ui_settings(ctypes.byref(settings)) != 0:
+            raise LingotLibraryError("Could not update UI settings")
+
+    def save_ui_settings(self) -> None:
+        self.lib.lingot_pyqt_save_ui_settings()
 
     def audio_systems(self) -> list[tuple[int, str]]:
         systems: list[tuple[int, str]] = []

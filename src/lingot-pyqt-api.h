@@ -45,6 +45,18 @@ typedef struct {
     int optimize_internal_parameters;
 } lingot_pyqt_config_values_t;
 
+typedef struct {
+    int spectrum_visible;
+    int gauge_visible;
+    int win_width;
+    int win_height;
+    int horizontal_paned_pos;
+    int vertical_paned_pos;
+    LINGOT_FLT visualization_rate;
+    LINGOT_FLT error_dispatch_rate;
+    LINGOT_FLT gauge_sampling_rate;
+} lingot_pyqt_ui_settings_t;
+
 int lingot_pyqt_initialize(const char* config_name);
 
 lingot_pyqt_context_t* lingot_pyqt_context_new(void);
@@ -104,6 +116,10 @@ int lingot_pyqt_pop_message(char* dst,
                             unsigned int dst_len,
                             lingot_msg_type_t* type,
                             int* error_code);
+
+int lingot_pyqt_get_ui_settings(lingot_pyqt_ui_settings_t* settings);
+int lingot_pyqt_set_ui_settings(const lingot_pyqt_ui_settings_t* settings);
+void lingot_pyqt_save_ui_settings(void);
 
 int lingot_pyqt_audio_system_count(void);
 const char* lingot_pyqt_audio_system_name(int index);

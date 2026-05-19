@@ -24,18 +24,26 @@ def main(argv: list[str] | None = None) -> int:
 
     context = None
     config_filename = ""
+    bindings = None
+    ui_settings = None
     startup_error = ""
 
     try:
         bindings = LingotBindings()
         bindings.initialize(args.config)
         config_filename = bindings.config_filename()
+        ui_settings = bindings.ui_settings()
         context = LingotContext(bindings)
         context.start()
     except LingotLibraryError as exc:
         startup_error = str(exc)
 
-    window = MainWindow(context=context, config_filename=config_filename)
+    window = MainWindow(
+        context=context,
+        config_filename=config_filename,
+        bindings=bindings,
+        ui_settings=ui_settings,
+    )
     window.show()
 
     if startup_error:

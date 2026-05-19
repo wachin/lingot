@@ -539,6 +539,43 @@ int lingot_pyqt_pop_message(char* dst,
     return result;
 }
 
+int lingot_pyqt_get_ui_settings(lingot_pyqt_ui_settings_t* settings) {
+    if (!settings) {
+        return -1;
+    }
+    memset(settings, 0, sizeof(*settings));
+    settings->spectrum_visible = ui_settings.spectrum_visible;
+    settings->gauge_visible = ui_settings.gauge_visible;
+    settings->win_width = ui_settings.win_width;
+    settings->win_height = ui_settings.win_height;
+    settings->horizontal_paned_pos = ui_settings.horizontal_paned_pos;
+    settings->vertical_paned_pos = ui_settings.vertical_paned_pos;
+    settings->visualization_rate = ui_settings.visualization_rate;
+    settings->error_dispatch_rate = ui_settings.error_dispatch_rate;
+    settings->gauge_sampling_rate = ui_settings.gauge_sampling_rate;
+    return 0;
+}
+
+int lingot_pyqt_set_ui_settings(const lingot_pyqt_ui_settings_t* settings) {
+    if (!settings) {
+        return -1;
+    }
+    ui_settings.spectrum_visible = settings->spectrum_visible;
+    ui_settings.gauge_visible = settings->gauge_visible;
+    ui_settings.win_width = settings->win_width;
+    ui_settings.win_height = settings->win_height;
+    ui_settings.horizontal_paned_pos = settings->horizontal_paned_pos;
+    ui_settings.vertical_paned_pos = settings->vertical_paned_pos;
+    ui_settings.visualization_rate = settings->visualization_rate;
+    ui_settings.error_dispatch_rate = settings->error_dispatch_rate;
+    ui_settings.gauge_sampling_rate = settings->gauge_sampling_rate;
+    return 0;
+}
+
+void lingot_pyqt_save_ui_settings(void) {
+    lingot_io_ui_settings_save();
+}
+
 int lingot_pyqt_audio_system_count(void) {
     return lingot_audio_system_get_count();
 }

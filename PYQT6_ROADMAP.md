@@ -178,14 +178,14 @@ Required menus/actions:
 - View -> Spectrum
 - Help -> About
 
-[ ] Port persisted UI settings.
+[x] Port persisted UI settings.
 
 The first PyQt6 version can either:
 
 - Reuse `src/lingot-io-ui-settings.c` through the wrapper API.
 - Or use `QSettings` while preserving values where practical.
 
-Recommended: reuse the existing settings file initially to avoid behavior drift.
+Implemented: reuse the existing settings file through the wrapper API to avoid behavior drift.
 
 [x] Port runtime timers with `QTimer`.
 

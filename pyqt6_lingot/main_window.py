@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .bindings import LingotContext, LingotLibraryError, Snapshot
+from .bindings import LingotBindings, LingotContext, LingotLibraryError, Snapshot, UiSettings
 from .config_dialog import ConfigDialog
 from .widgets.gauge import GaugeWidget
 from .widgets.spectrum import SpectrumWidget
@@ -22,9 +22,17 @@ from .widgets.strobe_disc import StrobeDiscWidget
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, context: LingotContext | None, config_filename: str = "") -> None:
+    def __init__(
+        self,
+        context: LingotContext | None,
+        config_filename: str = "",
+        bindings: LingotBindings | None = None,
+        ui_settings: UiSettings | None = None,
+    ) -> None:
         super().__init__()
         self.context = context
+        self.bindings = bindings
+        self.ui_settings = ui_settings
         self.config_filename = config_filename
         self.current_snapshot = Snapshot()
         self.show_gauge = True
@@ -42,6 +50,7 @@ class MainWindow(QMainWindow):
 
         self._build_actions()
         self._build_layout()
+        self._restore_ui_settings()
         self._build_timers()
 
     def _build_actions(self) -> None:
@@ -91,8 +100,8 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(8, 8, 8, 8)
         root.setSpacing(8)
 
-        main_splitter = QSplitter(Qt.Orientation.Vertical)
-        top_splitter = QSplitter()
+        self.main_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.top_splitter = QSplitter()
 
         self.visual_frame = QFrame()
         visual_layout = QVBoxLayout(self.visual_frame)
@@ -109,25 +118,59 @@ class MainWindow(QMainWindow):
             label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             label_layout.addWidget(label)
 
-        top_splitter.addWidget(self.visual_frame)
-        top_splitter.addWidget(label_frame)
-        top_splitter.setSizes([460, 220])
+        self.top_splitter.addWidget(self.visual_frame)
+        self.top_splitter.addWidget(label_frame)
+        self.top_splitter.setSizes([460, 220])
 
-        main_splitter.addWidget(top_splitter)
-        main_splitter.addWidget(self.spectrum)
-        main_splitter.setSizes([310, 190])
+        self.main_splitter.addWidget(self.top_splitter)
+        self.main_splitter.addWidget(self.spectrum)
+        self.main_splitter.setSizes([310, 190])
 
-        root.addWidget(main_splitter)
+        root.addWidget(self.main_splitter)
         self.setCentralWidget(central)
+
+    def _restore_ui_settings(self) -> None:
+        if self.ui_settings is None:
+            return
+        if self.ui_settings.win_width > 0 and self.ui_settings.win_height > 0:
+            self.resize(self.ui_settings.win_width, self.ui_settings.win_height)
+        self.spectrum_action.setChecked(bool(self.ui_settings.spectrum_visible))
+        self.spectrum.setVisible(bool(self.ui_settings.spectrum_visible))
+        if self.ui_settings.gauge_visible:
+            self.gauge_action.setChecked(True)
+            self._set_gauge_mode()
+        else:
+            self.strobe_action.setChecked(True)
+            self._set_strobe_mode()
+        if self.ui_settings.horizontal_paned_pos > 0:
+            self.top_splitter.setSizes([
+                self.ui_settings.horizontal_paned_pos,
+                max(120, self.width() - self.ui_settings.horizontal_paned_pos),
+            ])
+        if self.ui_settings.vertical_paned_pos > 0:
+            self.main_splitter.setSizes([
+                self.ui_settings.vertical_paned_pos,
+                max(120, self.height() - self.ui_settings.vertical_paned_pos),
+            ])
 
     def _build_timers(self) -> None:
         self.snapshot_timer = QTimer(self)
-        self.snapshot_timer.setInterval(40)
+        visualization_rate = (
+            self.ui_settings.visualization_rate
+            if self.ui_settings is not None and self.ui_settings.visualization_rate > 0
+            else 30.0
+        )
+        self.snapshot_timer.setInterval(max(1, int(1000 / visualization_rate)))
         self.snapshot_timer.timeout.connect(self._refresh_snapshot)
         self.snapshot_timer.start()
 
         self.message_timer = QTimer(self)
-        self.message_timer.setInterval(250)
+        error_dispatch_rate = (
+            self.ui_settings.error_dispatch_rate
+            if self.ui_settings is not None and self.ui_settings.error_dispatch_rate > 0
+            else 5.0
+        )
+        self.message_timer.setInterval(max(1, int(1000 / error_dispatch_rate)))
         self.message_timer.timeout.connect(self._dispatch_messages)
         self.message_timer.start()
 
@@ -243,6 +286,22 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event) -> None:  # noqa: N802 - Qt override name
         self.snapshot_timer.stop()
         self.message_timer.stop()
+        self._save_ui_settings()
         if self.context is not None:
             self.context.stop()
         super().closeEvent(event)
+
+    def _save_ui_settings(self) -> None:
+        if self.bindings is None or self.ui_settings is None:
+            return
+        self.ui_settings.spectrum_visible = int(self.spectrum_action.isChecked())
+        self.ui_settings.gauge_visible = int(self.gauge_action.isChecked())
+        self.ui_settings.win_width = self.width()
+        self.ui_settings.win_height = self.height()
+        self.ui_settings.horizontal_paned_pos = self.top_splitter.sizes()[0]
+        self.ui_settings.vertical_paned_pos = self.main_splitter.sizes()[0]
+        try:
+            self.bindings.set_ui_settings(self.ui_settings)
+            self.bindings.save_ui_settings()
+        except LingotLibraryError:
+            pass
