@@ -275,9 +275,9 @@ Required behavior:
 - Base/root frequency behavior. [x]
 - Note names. [x]
 - Cents shifts. [x]
-- Ratio shift formatting/parsing. [ ]
+- Ratio shift formatting/parsing. [x]
 - Add/delete notes. [x]
-- Import Scala `.scl` files.
+- Import Scala `.scl` files. [x]
 
 [ ] Preserve validation behavior.
 

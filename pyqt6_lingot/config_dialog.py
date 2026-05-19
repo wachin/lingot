@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
@@ -30,6 +31,8 @@ class ConfigDialog(QDialog):
         self.setMinimumWidth(420)
 
         self.values = context.config_values()
+        self.original_scale = context.scale()
+        self._context_scale_changed_during_dialog = False
         self._build_ui()
         self._load_values(self.values)
 
@@ -148,7 +151,7 @@ class ConfigDialog(QDialog):
         root.addLayout(scale_form)
 
         self.scale_table = QTableWidget(0, 2)
-        self.scale_table.setHorizontalHeaderLabels(["Note", "Cents"])
+        self.scale_table.setHorizontalHeaderLabels(["Note", "Shift"])
         self.scale_table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
         )
@@ -160,10 +163,13 @@ class ConfigDialog(QDialog):
         buttons = QHBoxLayout()
         self.scale_add_button = QPushButton("Add")
         self.scale_remove_button = QPushButton("Remove")
+        self.scale_import_button = QPushButton("Import .scl")
         self.scale_add_button.clicked.connect(self._add_scale_row)
         self.scale_remove_button.clicked.connect(self._remove_scale_row)
+        self.scale_import_button.clicked.connect(self._import_scl)
         buttons.addWidget(self.scale_add_button)
         buttons.addWidget(self.scale_remove_button)
+        buttons.addWidget(self.scale_import_button)
         buttons.addStretch()
         root.addLayout(buttons)
         return page
@@ -229,10 +235,9 @@ class ConfigDialog(QDialog):
         row = self.scale_table.rowCount()
         self.scale_table.insertRow(row)
         if note is None:
-            previous = self._scale_row_cents(row - 1) if row > 0 else 0.0
-            note = ScaleNote("?", min(previous + 100.0, 1199.0))
+            note = ScaleNote("?", min(row * 100.0, 1199.0), f"{min(row * 100.0, 1199.0):.6f}")
         self.scale_table.setItem(row, 0, QTableWidgetItem(note.name))
-        self.scale_table.setItem(row, 1, QTableWidgetItem(f"{note.cents:.6f}"))
+        self.scale_table.setItem(row, 1, QTableWidgetItem(note.shift or f"{note.cents:.6f}"))
 
     def _remove_scale_row(self) -> None:
         row = self.scale_table.currentRow()
@@ -241,22 +246,13 @@ class ConfigDialog(QDialog):
             return
         self.scale_table.removeRow(row)
 
-    def _scale_row_cents(self, row: int) -> float:
-        if row < 0:
-            return 0.0
-        item = self.scale_table.item(row, 1)
-        if item is None:
-            return 0.0
-        return float(item.text())
-
     def _collect_scale(self) -> Scale:
         notes: list[ScaleNote] = []
         names: set[str] = set()
-        last_cents = -1.0
 
         for row in range(self.scale_table.rowCount()):
             name_item = self.scale_table.item(row, 0)
-            cents_item = self.scale_table.item(row, 1)
+            shift_item = self.scale_table.item(row, 1)
             name = name_item.text().strip() if name_item is not None else ""
             if not name or name == "?" or any(char in name for char in " \t\n{}"):
                 raise LingotLibraryError("Scale note names must be non-empty and cannot contain spaces or braces.")
@@ -264,18 +260,10 @@ class ConfigDialog(QDialog):
                 raise LingotLibraryError("Scale note names must be unique.")
             names.add(name)
 
-            try:
-                cents = float(cents_item.text()) if cents_item is not None else 0.0
-            except ValueError as exc:
-                raise LingotLibraryError("Scale cents values must be numbers.") from exc
-            if row == 0 and abs(cents) > 1e-10:
-                raise LingotLibraryError("The reference note must be 0 cents.")
-            if cents < last_cents:
-                raise LingotLibraryError("Scale notes must be ordered by cents.")
-            if cents >= 1200.0:
-                raise LingotLibraryError("Scale notes must stay within one octave.")
-            last_cents = cents
-            notes.append(ScaleNote(name, cents))
+            shift = shift_item.text().strip() if shift_item is not None else ""
+            if not shift:
+                raise LingotLibraryError("Scale shifts must be non-empty.")
+            notes.append(ScaleNote(name, 0.0, shift))
 
         if not notes:
             raise LingotLibraryError("The scale must contain at least one note.")
@@ -285,6 +273,22 @@ class ConfigDialog(QDialog):
             self.scale_base_frequency.value(),
             notes,
         )
+
+    def _import_scl(self) -> None:
+        filename, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Open Scale File",
+            "",
+            "Scala files (*.scl)",
+        )
+        if not filename:
+            return
+        try:
+            self.context.import_scl(filename)
+            self._context_scale_changed_during_dialog = True
+            self._load_scale(self.context.scale())
+        except LingotLibraryError as exc:
+            QMessageBox.warning(self, "Lingot", str(exc))
 
     def _apply(self) -> bool:
         if self.min_frequency.value() >= self.max_frequency.value():
@@ -300,9 +304,10 @@ class ConfigDialog(QDialog):
             scale = self._collect_scale()
             self.context.set_config_values(values)
             self.context.set_audio_device(self.audio_device.currentText())
-            self.context.set_scale(scale)
+            self.context.set_scale_shifts(scale)
             self.context.restart()
             self.values = self.context.config_values()
+            self._context_scale_changed_during_dialog = False
         except LingotLibraryError as exc:
             QMessageBox.warning(self, "Lingot", str(exc))
             return False
@@ -311,3 +316,11 @@ class ConfigDialog(QDialog):
     def _accept(self) -> None:
         if self._apply():
             self.accept()
+
+    def reject(self) -> None:
+        if self._context_scale_changed_during_dialog:
+            try:
+                self.context.set_scale_shifts(self.original_scale)
+            except LingotLibraryError:
+                pass
+        super().reject()

@@ -51,6 +51,7 @@ class ConfigValues(ctypes.Structure):
 class ScaleNote:
     name: str
     cents: float
+    shift: str = ""
 
 
 @dataclass
@@ -148,6 +149,8 @@ class LingotBindings:
             ctypes.c_uint,
             ctypes.c_char_p,
             ctypes.c_uint,
+            ctypes.c_char_p,
+            ctypes.c_uint,
             ctypes.POINTER(ctypes.c_double),
         ]
         self.lib.lingot_pyqt_context_get_scale_note.restype = ctypes.c_int
@@ -161,6 +164,22 @@ class LingotBindings:
             ctypes.POINTER(ctypes.c_double),
         ]
         self.lib.lingot_pyqt_context_set_scale.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_set_scale_shifts.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+            ctypes.c_double,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_char_p),
+        ]
+        self.lib.lingot_pyqt_context_set_scale_shifts.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_import_scl.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+        ]
+        self.lib.lingot_pyqt_context_import_scl.restype = ctypes.c_int
 
         self.lib.lingot_pyqt_context_start.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_start.restype = ctypes.c_int
@@ -366,12 +385,15 @@ class LingotContext:
         notes: list[ScaleNote] = []
         for index in range(notes_count.value):
             note_buffer = ctypes.create_string_buffer(128)
+            shift_buffer = ctypes.create_string_buffer(128)
             cents = ctypes.c_double()
             result = self.bindings.lib.lingot_pyqt_context_get_scale_note(
                 self._ptr,
                 index,
                 note_buffer,
                 len(note_buffer),
+                shift_buffer,
+                len(shift_buffer),
                 ctypes.byref(cents),
             )
             if result != 0:
@@ -380,6 +402,7 @@ class LingotContext:
                 ScaleNote(
                     note_buffer.value.decode("utf-8", errors="replace"),
                     cents.value,
+                    shift_buffer.value.decode("utf-8", errors="replace"),
                 )
             )
 
@@ -407,6 +430,36 @@ class LingotContext:
         )
         if result != 0:
             raise LingotLibraryError("Scale values are invalid")
+
+    def set_scale_shifts(self, scale: Scale) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        encoded_names = [note.name.encode("utf-8") for note in scale.notes]
+        encoded_shifts = [
+            (note.shift or f"{note.cents:.6f}").encode("utf-8")
+            for note in scale.notes
+        ]
+        names_array = (ctypes.c_char_p * len(encoded_names))(*encoded_names)
+        shifts_array = (ctypes.c_char_p * len(encoded_shifts))(*encoded_shifts)
+        result = self.bindings.lib.lingot_pyqt_context_set_scale_shifts(
+            self._ptr,
+            scale.name.encode("utf-8"),
+            scale.base_frequency,
+            len(scale.notes),
+            names_array,
+            shifts_array,
+        )
+        if result != 0:
+            raise LingotLibraryError("Scale values are invalid")
+
+    def import_scl(self, filename: str) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_import_scl(
+            self._ptr, filename.encode("utf-8")
+        )
+        if result != 0:
+            raise LingotLibraryError(f"Could not import Scala scale: {filename}")
 
     def pop_message(self) -> tuple[int, int, str] | None:
         text = ctypes.create_string_buffer(1001)

@@ -72,6 +72,8 @@ int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
                                        unsigned int index,
                                        char* name_dst,
                                        unsigned int name_dst_len,
+                                       char* shift_dst,
+                                       unsigned int shift_dst_len,
                                        LINGOT_FLT* cents);
 int lingot_pyqt_context_set_scale(lingot_pyqt_context_t* context,
                                   const char* name,
@@ -79,6 +81,14 @@ int lingot_pyqt_context_set_scale(lingot_pyqt_context_t* context,
                                   unsigned int notes,
                                   const char** note_names,
                                   const LINGOT_FLT* cents);
+int lingot_pyqt_context_set_scale_shifts(lingot_pyqt_context_t* context,
+                                         const char* name,
+                                         LINGOT_FLT base_frequency,
+                                         unsigned int notes,
+                                         const char** note_names,
+                                         const char** shifts);
+int lingot_pyqt_context_import_scl(lingot_pyqt_context_t* context,
+                                   const char* filename);
 
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context);
 void lingot_pyqt_context_stop(lingot_pyqt_context_t* context);

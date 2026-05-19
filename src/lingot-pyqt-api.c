@@ -32,6 +32,7 @@
 #include "lingot-config.h"
 #include "lingot-core.h"
 #include "lingot-io-config.h"
+#include "lingot-io-config-scale.h"
 #include "lingot-io-ui-settings.h"
 #include "lingot-pyqt-api.h"
 
@@ -249,14 +250,21 @@ int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
                                        unsigned int index,
                                        char* name_dst,
                                        unsigned int name_dst_len,
+                                       char* shift_dst,
+                                       unsigned int shift_dst_len,
                                        LINGOT_FLT* cents) {
-    if (!context || !name_dst || name_dst_len == 0 || !cents
+    if (!context || !name_dst || name_dst_len == 0
+            || !shift_dst || shift_dst_len == 0 || !cents
             || index >= context->conf.scale.notes) {
         return -1;
     }
     snprintf(name_dst, name_dst_len, "%s",
              context->conf.scale.note_name[index]
                 ? context->conf.scale.note_name[index] : "");
+    lingot_config_scale_format_shift(shift_dst,
+                                     context->conf.scale.offset_cents[index],
+                                     context->conf.scale.offset_ratios[0][index],
+                                     context->conf.scale.offset_ratios[1][index]);
     *cents = context->conf.scale.offset_cents[index];
     return 0;
 }
@@ -311,6 +319,107 @@ int lingot_pyqt_context_set_scale(lingot_pyqt_context_t* context,
     }
     context->conf.scale.offset_ratios[0][0] = 1;
     context->conf.scale.offset_ratios[1][0] = 1;
+    lingot_config_update_internal_params(&context->conf);
+    return 0;
+}
+
+int lingot_pyqt_context_set_scale_shifts(lingot_pyqt_context_t* context,
+                                         const char* name,
+                                         LINGOT_FLT base_frequency,
+                                         unsigned int notes,
+                                         const char** note_names,
+                                         const char** shifts) {
+    if (!context || !name || !note_names || !shifts
+            || notes < 1 || notes > 128 || base_frequency <= 0.0) {
+        return -1;
+    }
+
+    LINGOT_FLT* cents = malloc(notes * sizeof(LINGOT_FLT));
+    short int* numerators = malloc(notes * sizeof(short int));
+    short int* denominators = malloc(notes * sizeof(short int));
+    if (!cents || !numerators || !denominators) {
+        free(cents);
+        free(numerators);
+        free(denominators);
+        return -1;
+    }
+
+    LINGOT_FLT last_cents = -1.0;
+    unsigned int i;
+    for (i = 0; i < notes; i++) {
+        char shift_buff[128];
+        if (!note_names[i] || !note_names[i][0] || !shifts[i]
+                || strchr(note_names[i], ' ')
+                || strchr(note_names[i], '\t')
+                || strchr(note_names[i], '\n')
+                || strchr(note_names[i], '{')
+                || strchr(note_names[i], '}')) {
+            free(cents);
+            free(numerators);
+            free(denominators);
+            return -1;
+        }
+        snprintf(shift_buff, sizeof(shift_buff), "%s", shifts[i]);
+        if (!lingot_config_scale_parse_shift(shift_buff, &cents[i],
+                                             &numerators[i], &denominators[i])) {
+            free(cents);
+            free(numerators);
+            free(denominators);
+            return -1;
+        }
+        if ((i == 0 && fabs(cents[i]) > 1e-10)
+                || cents[i] < last_cents || cents[i] >= 1200.0) {
+            free(cents);
+            free(numerators);
+            free(denominators);
+            return -1;
+        }
+        unsigned int j;
+        for (j = i + 1; j < notes; j++) {
+            if (note_names[j] && strcmp(note_names[i], note_names[j]) == 0) {
+                free(cents);
+                free(numerators);
+                free(denominators);
+                return -1;
+            }
+        }
+        last_cents = cents[i];
+    }
+
+    lingot_config_scale_destroy(&context->conf.scale);
+    context->conf.scale.name = lingot_pyqt_strdup(name);
+    lingot_config_scale_allocate(&context->conf.scale, (unsigned short int) notes);
+    context->conf.scale.base_frequency = base_frequency;
+
+    for (i = 0; i < notes; i++) {
+        context->conf.scale.note_name[i] = lingot_pyqt_strdup(note_names[i]);
+        context->conf.scale.offset_cents[i] = cents[i];
+        context->conf.scale.offset_ratios[0][i] = numerators[i];
+        context->conf.scale.offset_ratios[1][i] = denominators[i];
+    }
+
+    free(cents);
+    free(numerators);
+    free(denominators);
+    lingot_config_update_internal_params(&context->conf);
+    return 0;
+}
+
+int lingot_pyqt_context_import_scl(lingot_pyqt_context_t* context,
+                                   const char* filename) {
+    if (!context || !filename) {
+        return -1;
+    }
+
+    lingot_scale_t scale;
+    lingot_config_scale_new(&scale);
+    if (!lingot_config_scale_load_scl(&scale, (char*) filename)) {
+        lingot_config_scale_destroy(&scale);
+        return -1;
+    }
+
+    lingot_config_scale_copy(&context->conf.scale, &scale);
+    lingot_config_scale_destroy(&scale);
     lingot_config_update_internal_params(&context->conf);
     return 0;
 }
