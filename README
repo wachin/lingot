@@ -180,8 +180,8 @@ Current PyQt6 status:
 * Open/save configuration through the existing Lingot JSON config code.
 * Preferences dialog with input device selection, algorithm settings,
   frequency limits, scale editing, ratio/cents shifts, and Scala `.scl` import.
-* Installable `lingot-pyqt6` launcher, manual page, and experimental desktop
-  entry reusing the Lingot icon.
+* Installable `lingot-pyqt6` launcher, manual page, `org.lingot.lingot`
+  AppStream metadata, and desktop entry reusing the Lingot icon.
 * The GTK frontend remains available while the PyQt6 port reaches parity.
 
 Resources

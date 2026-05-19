@@ -332,8 +332,9 @@ Files:
 
 - `icons/org.nongnu.lingot.svg` [x]
 - `org.nongnu.lingot.desktop` [x]
-- `org.nongnu.lingot-pyqt6.desktop` [x]
-- `org.nongnu.lingot.appdata.xml`
+- `org.lingot.lingot.desktop` [x]
+- `org.nongnu.lingot.appdata.xml` [x]
+- `org.lingot.lingot.appdata.xml` [x]
 
 [x] Document development setup.
 

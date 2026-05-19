@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+    <id>org.lingot.lingot</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-2.0</project_license>
+    <name>Lingot PyQt6</name>
+    <developer id="org.lingot">
+        <name>Lingot developers</name>
+    </developer>
+    <summary>Experimental PyQt6 frontend for the Lingot tuner</summary>
+    <description>
+        <p>
+            Lingot PyQt6 is an experimental frontend for LINGOT, a musical
+            instrument tuner. It reuses Lingot's existing C engine for audio
+            capture, pitch detection, FFT analysis, configuration files, UI
+            settings, and Scala scale support.
+        </p>
+        <p>
+            This frontend is being ported incrementally from the stable GTK
+            application. The GTK frontend remains available as Lingot while
+            the PyQt6 port reaches feature parity.
+        </p>
+        <ul>
+            <li>Gauge and strobe-disc tuning views.</li>
+            <li>Spectrum display backed by the existing Lingot engine.</li>
+            <li>Configuration dialog with input, algorithm, frequency, and scale settings.</li>
+            <li>Scala .scl import support.</li>
+        </ul>
+    </description>
+
+    <launchable type="desktop-id">org.lingot.lingot.desktop</launchable>
+
+    <screenshots>
+        <screenshot type="default">
+            <caption>The Lingot tuner interface</caption>
+            <image>https://www.nongnu.org/lingot/images/lingot-screenshot-896x504.png</image>
+        </screenshot>
+    </screenshots>
+
+    <url type="homepage">https://www.nongnu.org/lingot/</url>
+    <url type="bugtracker">https://github.com/ibancg/lingot/issues/</url>
+    <url type="vcs-browser">https://github.com/ibancg/lingot</url>
+
+    <categories>
+        <category>Education</category>
+        <category>Music</category>
+    </categories>
+    <provides>
+        <binary>lingot-pyqt6</binary>
+    </provides>
+
+    <content_rating type="oars-1.1" />
+</component>

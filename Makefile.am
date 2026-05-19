@@ -145,10 +145,12 @@ dist_icons_DATA = icons/org.nongnu.lingot.svg
 gnomemenudir = $(datadir)/applications
 dist_gnomemenu_DATA = \
   org.nongnu.lingot.desktop \
-  org.nongnu.lingot-pyqt6.desktop
+  org.lingot.lingot.desktop
 
 appdatadir = $(datadir)/metainfo
-dist_appdata_DATA = org.nongnu.lingot.appdata.xml
+dist_appdata_DATA = \
+  org.nongnu.lingot.appdata.xml \
+  org.lingot.lingot.appdata.xml
 
 pyqt6_lingotdir = $(pythondir)/pyqt6_lingot
 dist_pyqt6_lingot_PYTHON = \
