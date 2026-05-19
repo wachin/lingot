@@ -173,6 +173,9 @@ int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
     values->max_frequency = context->conf.max_frequency;
     values->root_frequency_error = context->conf.root_frequency_error;
     values->optimize_internal_parameters = context->conf.optimize_internal_parameters;
+    values->sample_rate = context->conf.sample_rate;
+    values->oversampling = context->conf.oversampling;
+    values->gauge_range = context->conf.gauge_range;
     return 0;
 }
 

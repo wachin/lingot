@@ -213,7 +213,7 @@ Required behavior:
 
 Source reference: `src/lingot-gui-gauge.c`.
 
-[ ] Port spectrum drawing from Cairo/GTK to `QPainter`.
+[x] Port spectrum drawing from Cairo/GTK to `QPainter`.
 
 Source reference: `src/lingot-gui-spectrum.c`.
 

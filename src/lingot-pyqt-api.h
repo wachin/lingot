@@ -43,6 +43,9 @@ typedef struct {
     LINGOT_FLT max_frequency;
     LINGOT_FLT root_frequency_error;
     int optimize_internal_parameters;
+    int sample_rate;
+    unsigned int oversampling;
+    LINGOT_FLT gauge_range;
 } lingot_pyqt_config_values_t;
 
 typedef struct {

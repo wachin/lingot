@@ -44,6 +44,9 @@ class ConfigValues(ctypes.Structure):
         ("max_frequency", ctypes.c_double),
         ("root_frequency_error", ctypes.c_double),
         ("optimize_internal_parameters", ctypes.c_int),
+        ("sample_rate", ctypes.c_int),
+        ("oversampling", ctypes.c_uint),
+        ("gauge_range", ctypes.c_double),
     ]
 
 

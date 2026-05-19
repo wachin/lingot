@@ -68,6 +68,7 @@ class MainWindow(QMainWindow):
 
         self._build_actions()
         self._build_layout()
+        self._sync_config_dependent_widgets()
         self._restore_ui_settings()
         self._update_engine_status()
         self._build_timers()
@@ -204,6 +205,7 @@ class MainWindow(QMainWindow):
         self.current_snapshot = self.context.snapshot()
         self.gauge.set_error(self.current_snapshot.error_cents)
         self.strobe.set_error(self.current_snapshot.error_cents)
+        self.spectrum.set_frequency(self.current_snapshot.frequency)
 
         if self.current_snapshot.running and self.current_snapshot.spectrum_size:
             self.spectrum.set_samples(self.context.spectrum(self.current_snapshot.spectrum_size))
@@ -267,6 +269,7 @@ class MainWindow(QMainWindow):
             self.context.load_config(filename)
             self.context.restart()
             self.config_filename = filename
+            self._sync_config_dependent_widgets()
             self._update_engine_status()
             self._show_temporary_status(f"Loaded configuration: {self._config_display_name()}")
         except LingotLibraryError as exc:
@@ -302,6 +305,7 @@ class MainWindow(QMainWindow):
             return
         dialog = ConfigDialog(self.context, self, ui_settings=self.ui_settings)
         if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._sync_config_dependent_widgets()
             self._update_engine_status()
             self._show_temporary_status("Preferences applied")
 
@@ -372,3 +376,15 @@ class MainWindow(QMainWindow):
             self._set_status("Engine offline")
         else:
             self._set_status(f"Starting - {self._config_status_text()}")
+
+    def _sync_config_dependent_widgets(self) -> None:
+        if self.context is None:
+            return
+        try:
+            values = self.context.config_values()
+        except LingotLibraryError:
+            return
+        self.gauge.set_range(values.gauge_range)
+        oversampling = values.oversampling if values.oversampling else 1
+        if values.sample_rate > 0:
+            self.spectrum.set_scale(0.5 * values.sample_rate / oversampling, values.min_overall_snr)
