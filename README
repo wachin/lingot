@@ -37,7 +37,10 @@ Requirements
   [ALSA](https://www.alsa-project.org/main/index.php/Main_Page), 
   [OSS](http://www.opensound.com/oss.html) or 
   [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) support.   
-* [GTK+](https://www.gtk.org/) library, version _3.10_ or above.
+* [GTK+](https://www.gtk.org/) library, version _3.10_ or above for the
+  current stable frontend.
+* [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) for the
+  experimental Python/Qt frontend.
 
 Installation
 ------------
@@ -82,6 +85,19 @@ sudo apt-get install \
     pkg-config
 ```
 
+For the experimental PyQt6 frontend, install PyQt6 as well. For example, on
+Debian-based systems:
+
+```console
+sudo apt-get install python3-pyqt6
+```
+
+or inside a Python environment:
+
+```console
+python3 -m pip install PyQt6
+```
+
 Beware that LINGOT ships an experimental shared library, whose interface could
 be subject to change. If you have trouble finding the library when launching the
 aplication, please consider reporting a bug, and try setting the library path
@@ -109,6 +125,50 @@ will take the configuration file `~/.config/lingot/bass.conf`. This is useful
 for maintaining different configurations for different instruments. It's also
 possible to load and save configuration files from the GUI. The default
 configuration file is `~/.config/lingot/lingot.conf`.
+
+Experimental PyQt6 frontend
+---------------------------
+
+This tree also contains an experimental PyQt6 frontend under
+`pyqt6_lingot/`. It is being ported incrementally from the GTK 3 frontend while
+reusing the existing C engine for audio capture, pitch detection, FFT, filters,
+configuration files, and Scala scale support.
+
+The PyQt6 frontend is not yet the default `lingot` executable. During
+development, build the C library first:
+
+```console
+./bootstrap
+./configure
+make
+```
+
+Then run the PyQt6 frontend from the source tree:
+
+```console
+python3 -m pyqt6_lingot
+```
+
+If the local shared library cannot be found, point the frontend at it:
+
+```console
+LINGOT_LIBRARY_PATH=$PWD/.libs/liblingot.so python3 -m pyqt6_lingot
+```
+
+The PyQt6 frontend supports the same configuration-name option:
+
+```console
+python3 -m pyqt6_lingot -c bass
+```
+
+Current PyQt6 status:
+
+* Main window with gauge, strobe disc, spectrum view, menus, and live polling
+  through the C engine.
+* Open/save configuration through the existing Lingot JSON config code.
+* Preferences dialog with input device selection, algorithm settings,
+  frequency limits, scale editing, ratio/cents shifts, and Scala `.scl` import.
+* The GTK frontend remains available while the PyQt6 port reaches parity.
 
 Resources
 ---------
