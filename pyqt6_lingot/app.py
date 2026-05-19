@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("Lingot")
-    app.setDesktopFileName("org.nongnu.lingot")
+    app.setDesktopFileName("org.nongnu.lingot-pyqt6")
 
     context = None
     config_filename = ""

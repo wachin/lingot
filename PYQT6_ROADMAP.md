@@ -326,12 +326,13 @@ Recommended transition:
 
 [x] Add manual page for the experimental `lingot-pyqt6` executable.
 
-[ ] Reuse existing app metadata and icon.
+[x] Reuse existing app metadata and icon.
 
 Files:
 
-- `icons/org.nongnu.lingot.svg`
-- `org.nongnu.lingot.desktop`
+- `icons/org.nongnu.lingot.svg` [x]
+- `org.nongnu.lingot.desktop` [x]
+- `org.nongnu.lingot-pyqt6.desktop` [x]
 - `org.nongnu.lingot.appdata.xml`
 
 [x] Document development setup.

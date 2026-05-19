@@ -143,7 +143,9 @@ iconsdir = $(datadir)/icons/hicolor/scalable/apps
 dist_icons_DATA = icons/org.nongnu.lingot.svg
 
 gnomemenudir = $(datadir)/applications
-dist_gnomemenu_DATA = org.nongnu.lingot.desktop
+dist_gnomemenu_DATA = \
+  org.nongnu.lingot.desktop \
+  org.nongnu.lingot-pyqt6.desktop
 
 appdatadir = $(datadir)/metainfo
 dist_appdata_DATA = org.nongnu.lingot.appdata.xml

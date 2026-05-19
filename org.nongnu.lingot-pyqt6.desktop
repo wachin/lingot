@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Lingot PyQt6
+GenericName=Musical instrument tuner
+GenericName[fr]=Accordeur d’instrument musical
+Keywords=frequency;note;gauge
+Comment=Experimental PyQt6 frontend for Lingot
+Exec=lingot-pyqt6
+Icon=org.nongnu.lingot
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Music;Tuner;
