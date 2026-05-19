@@ -68,7 +68,7 @@ Recommended shape:
 
 ## Phase 1: Stabilize The C Engine Boundary
 
-[ ] Define a minimal GUI-facing C API that hides internal structs from Python.
+[x] Define a minimal GUI-facing C API that hides internal structs from Python.
 
 Proposed API responsibilities:
 
@@ -82,12 +82,12 @@ Proposed API responsibilities:
 - Enumerate audio systems/devices/sample rates.
 - Pop queued messages.
 
-[ ] Add a wrapper source pair, for example:
+[x] Add a wrapper source pair, for example:
 
 - `src/lingot-pyqt-api.h`
 - `src/lingot-pyqt-api.c`
 
-[ ] Make the wrapper API memory-safe for Python callers.
+[x] Make the wrapper API memory-safe for Python callers.
 
 Rules:
 
@@ -96,7 +96,7 @@ Rules:
 - Return simple status codes.
 - Provide destroy/free functions for anything allocated by C.
 
-[ ] Add build output for a shared library loadable from Python.
+[x] Add build output for a shared library loadable from Python.
 
 Options:
 
@@ -108,7 +108,7 @@ Options:
 
 ## Phase 2: Create The PyQt6 Application Skeleton
 
-[ ] Add a Python package, for example:
+[x] Add a Python package, for example:
 
 - `pyqt6_lingot/`
 - `pyqt6_lingot/__main__.py`
@@ -120,13 +120,13 @@ Options:
 - `pyqt6_lingot/widgets/spectrum.py`
 - `pyqt6_lingot/widgets/strobe_disc.py`
 
-[ ] Choose binding technology.
+[x] Choose binding technology.
 
 Recommended first choice: `ctypes`.
 
 Reason: the required API can be small and C-shaped, avoiding a heavier compiled Python extension while the port is still moving. If the API grows complex, switch to `cffi` or a proper extension later.
 
-[ ] Add dependency metadata.
+[x] Add dependency metadata.
 
 Candidate files:
 
@@ -141,7 +141,7 @@ Likely development dependencies:
 
 - `pytest`
 
-[ ] Implement command-line compatibility.
+[x] Implement command-line compatibility.
 
 Required behavior:
 
@@ -152,7 +152,7 @@ Required behavior:
 
 ## Phase 3: Port The Main Window
 
-[ ] Recreate the main window from `src/lingot-gui-mainframe.glade`.
+[x] Add an initial PyQt6 main window based on `src/lingot-gui-mainframe.glade`.
 
 PyQt6 widgets:
 
@@ -163,7 +163,7 @@ PyQt6 widgets:
 - `QLabel`
 - custom `QWidget` drawing areas
 
-[ ] Port the menus.
+[x] Port the main menu shell.
 
 Required menus/actions:
 
@@ -185,7 +185,7 @@ The first PyQt6 version can either:
 
 Recommended: reuse the existing settings file initially to avoid behavior drift.
 
-[ ] Port runtime timers with `QTimer`.
+[x] Port runtime timers with `QTimer`.
 
 Required timers:
 
@@ -193,7 +193,7 @@ Required timers:
 - Gauge sampling
 - Visualization redraw
 
-[ ] Preserve core lifecycle.
+[x] Preserve core lifecycle.
 
 Required behavior:
 
@@ -417,14 +417,14 @@ Mitigation: defer pure-Python DSP/audio until the PyQt6 frontend is already prov
 
 ## Immediate Next Steps
 
-[ ] Add `src/lingot-pyqt-api.h` and `src/lingot-pyqt-api.c`.
+[x] Add `src/lingot-pyqt-api.h` and `src/lingot-pyqt-api.c`.
 
-[ ] Expose only enough API to create config, start core, stop core, read frequency, read SPL data, and pop messages.
+[x] Expose only enough API to create config, start core, stop core, read frequency, read SPL data, and pop messages.
 
-[ ] Add a minimal `pyqt6_lingot` package with a `QMainWindow`.
+[x] Add a minimal `pyqt6_lingot` package with a `QMainWindow`.
 
-[ ] Draw placeholder gauge/spectrum widgets.
+[x] Draw placeholder gauge/spectrum widgets.
 
-[ ] Connect Qt timers to the wrapper API.
+[x] Connect Qt timers to the wrapper API.
 
 [ ] Verify the frontend can launch, close, and cleanly stop the C core.

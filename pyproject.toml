@@ -1,0 +1,12 @@
+[project]
+name = "lingot-pyqt6"
+version = "0.1.0"
+description = "Experimental PyQt6 frontend for Lingot"
+readme = "README"
+requires-python = ">=3.9"
+dependencies = [
+    "PyQt6",
+]
+
+[project.scripts]
+lingot-pyqt6 = "pyqt6_lingot.app:main"

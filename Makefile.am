@@ -45,8 +45,16 @@ liblingot_la_SOURCES = \
     src/lingot-fft.c \
     src/lingot-fft.h \
     src/lingot-filter.c \
+    src/lingot-io-config-scale.c \
+    src/lingot-io-config-scale.h \
+    src/lingot-io-config.c \
+    src/lingot-io-config.h \
+    src/lingot-io-ui-settings.c \
+    src/lingot-io-ui-settings.h \
     src/lingot-i18n.h \
     src/lingot-msg.c \
+    src/lingot-pyqt-api.c \
+    src/lingot-pyqt-api.h \
     src/lingot-signal.c \
     src/lingot-signal.h
 
@@ -61,7 +69,8 @@ pkginclude_HEADERS = \
     src/lingot-core.h \
     src/lingot-defs.h \
     src/lingot-filter.h \
-    src/lingot-msg.h
+    src/lingot-msg.h \
+    src/lingot-pyqt-api.h
 
 src/lingot-resources.c: src/lingot.gresource.xml
 	$(GLIB_COMPILE_RESOURCES) $< --target=$@ --sourcedir=$(srcdir)/src --generate-source
@@ -71,8 +80,8 @@ src/lingot-resources.c: src/lingot.gresource.xml
 lingot_shared_object_version = 0:0:0
 
 # Options to build the library itself (dependencies)
-liblingot_dep_cflags = $(ALSA_CFLAGS) $(JACK_CFLAGS) $(LIBFFTW_CFLAGS) $(OSS_CFLAGS) $(PULSEAUDIO_CFLAGS)
-liblingot_dep_libs   = $(ALSA_LIBS)   $(JACK_LIBS)   $(LIBFFTW_LIBS)   $(OSS_LIBS)   $(PULSEAUDIO_LIBS)
+liblingot_dep_cflags = $(ALSA_CFLAGS) $(JACK_CFLAGS) $(LIBFFTW_CFLAGS) $(OSS_CFLAGS) $(PULSEAUDIO_CFLAGS) $(JSON_CFLAGS)
+liblingot_dep_libs   = $(ALSA_LIBS)   $(JACK_LIBS)   $(LIBFFTW_LIBS)   $(OSS_LIBS)   $(PULSEAUDIO_LIBS)   $(JSON_LIBS)
 
 # Locally link against the library.
 liblingot_rdep_cflags = -I$(srcdir)/src $(liblingot_dep_cflags)
@@ -103,12 +112,6 @@ lingot_SOURCES = \
     src/lingot-gui-spectrum.h \
     src/lingot-gui-strobe-disc.c \
     src/lingot-gui-strobe-disc.h \
-    src/lingot-io-config-scale.c \
-    src/lingot-io-config-scale.h \
-    src/lingot-io-config.c \
-    src/lingot-io-config.h \
-    src/lingot-io-ui-settings.c \
-    src/lingot-io-ui-settings.h \
     src/lingot-strobe.png \
     src/lingot.c \
     src/lingot.gresource.xml
