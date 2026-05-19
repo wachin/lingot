@@ -165,6 +165,8 @@ PyQt6 widgets:
 
 [x] Port the main menu shell.
 
+[x] Wire Open Configuration and Save Configuration to the C config loader/saver.
+
 Required menus/actions:
 
 - File -> Open Configuration
@@ -230,7 +232,9 @@ Suggested tests:
 
 ## Phase 5: Port The Configuration Dialog
 
-[ ] Recreate dialog layout from `src/lingot-gui-config-dialog.glade`.
+[x] Add an initial functional preferences dialog for core tuner parameters.
+
+[ ] Recreate the full dialog layout from `src/lingot-gui-config-dialog.glade`.
 
 PyQt6 widgets:
 
@@ -256,12 +260,12 @@ Required behavior:
 
 Required behavior:
 
-- Noise threshold.
-- Calculation rate.
-- Temporal window.
-- FFT size.
-- Minimum/maximum frequency.
-- Optimize internal parameters toggle.
+- Noise threshold. [x]
+- Calculation rate. [x]
+- Temporal window. [x]
+- FFT size. [x]
+- Minimum/maximum frequency. [x]
+- Optimize internal parameters toggle. [x]
 
 [ ] Port scale editor.
 

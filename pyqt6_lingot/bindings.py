@@ -32,6 +32,20 @@ class Snapshot(ctypes.Structure):
         return self.closest_note_index >= 0 and not math.isnan(self.error_cents)
 
 
+class ConfigValues(ctypes.Structure):
+    _fields_ = [
+        ("audio_system_index", ctypes.c_int),
+        ("fft_size", ctypes.c_uint),
+        ("temporal_window", ctypes.c_double),
+        ("min_overall_snr", ctypes.c_double),
+        ("calculation_rate", ctypes.c_double),
+        ("min_frequency", ctypes.c_double),
+        ("max_frequency", ctypes.c_double),
+        ("root_frequency_error", ctypes.c_double),
+        ("optimize_internal_parameters", ctypes.c_int),
+    ]
+
+
 def _candidate_libraries() -> Iterable[Path | str]:
     env_path = os.environ.get("LINGOT_LIBRARY_PATH")
     if env_path:
@@ -69,11 +83,38 @@ class LingotBindings:
         self.lib.lingot_pyqt_context_destroy.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_destroy.restype = None
 
+        self.lib.lingot_pyqt_context_load_config.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+        ]
+        self.lib.lingot_pyqt_context_load_config.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_save_config.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+        ]
+        self.lib.lingot_pyqt_context_save_config.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_get_config_values.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ConfigValues),
+        ]
+        self.lib.lingot_pyqt_context_get_config_values.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_set_config_values.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ConfigValues),
+        ]
+        self.lib.lingot_pyqt_context_set_config_values.restype = ctypes.c_int
+
         self.lib.lingot_pyqt_context_start.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_start.restype = ctypes.c_int
 
         self.lib.lingot_pyqt_context_stop.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_stop.restype = None
+
+        self.lib.lingot_pyqt_context_restart.argtypes = [ctypes.c_void_p]
+        self.lib.lingot_pyqt_context_restart.restype = ctypes.c_int
 
         self.lib.lingot_pyqt_context_get_snapshot.argtypes = [
             ctypes.c_void_p,
@@ -123,6 +164,10 @@ class LingotContext:
         if self._ptr:
             self.bindings.lib.lingot_pyqt_context_stop(self._ptr)
 
+    def restart(self) -> None:
+        if self._ptr and self.bindings.lib.lingot_pyqt_context_restart(self._ptr) != 0:
+            raise LingotLibraryError("Could not restart Lingot core")
+
     def close(self) -> None:
         if self._ptr:
             self.bindings.lib.lingot_pyqt_context_destroy(self._ptr)
@@ -144,6 +189,44 @@ class LingotContext:
             self._ptr, buffer, size
         )
         return [buffer[index] for index in range(copied)]
+
+    def load_config(self, filename: str) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_load_config(
+            self._ptr, filename.encode("utf-8")
+        )
+        if result != 0:
+            raise LingotLibraryError(f"Could not load configuration: {filename}")
+
+    def save_config(self, filename: str) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_save_config(
+            self._ptr, filename.encode("utf-8")
+        )
+        if result != 0:
+            raise LingotLibraryError(f"Could not save configuration: {filename}")
+
+    def config_values(self) -> ConfigValues:
+        values = ConfigValues()
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_get_config_values(
+            self._ptr, ctypes.byref(values)
+        )
+        if result != 0:
+            raise LingotLibraryError("Could not read configuration values")
+        return values
+
+    def set_config_values(self, values: ConfigValues) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        result = self.bindings.lib.lingot_pyqt_context_set_config_values(
+            self._ptr, ctypes.byref(values)
+        )
+        if result != 0:
+            raise LingotLibraryError("Configuration values are invalid")
 
     def pop_message(self) -> tuple[int, int, str] | None:
         text = ctypes.create_string_buffer(1001)

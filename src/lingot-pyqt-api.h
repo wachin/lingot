@@ -33,6 +33,18 @@ typedef struct {
     unsigned int spectrum_size;
 } lingot_pyqt_snapshot_t;
 
+typedef struct {
+    int audio_system_index;
+    unsigned int fft_size;
+    LINGOT_FLT temporal_window;
+    LINGOT_FLT min_overall_snr;
+    LINGOT_FLT calculation_rate;
+    LINGOT_FLT min_frequency;
+    LINGOT_FLT max_frequency;
+    LINGOT_FLT root_frequency_error;
+    int optimize_internal_parameters;
+} lingot_pyqt_config_values_t;
+
 int lingot_pyqt_initialize(const char* config_name);
 
 lingot_pyqt_context_t* lingot_pyqt_context_new(void);
@@ -42,6 +54,10 @@ int lingot_pyqt_context_load_config(lingot_pyqt_context_t* context,
                                     const char* filename);
 int lingot_pyqt_context_save_config(lingot_pyqt_context_t* context,
                                     const char* filename);
+int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
+                                          lingot_pyqt_config_values_t* values);
+int lingot_pyqt_context_set_config_values(lingot_pyqt_context_t* context,
+                                          const lingot_pyqt_config_values_t* values);
 
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context);
 void lingot_pyqt_context_stop(lingot_pyqt_context_t* context);

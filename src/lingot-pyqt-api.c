@@ -146,6 +146,51 @@ int lingot_pyqt_context_save_config(lingot_pyqt_context_t* context,
     return lingot_io_config_save(&context->conf, filename) ? 0 : -1;
 }
 
+int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
+                                          lingot_pyqt_config_values_t* values) {
+    if (!context || !values) {
+        return -1;
+    }
+
+    memset(values, 0, sizeof(*values));
+    values->audio_system_index = context->conf.audio_system_index;
+    values->fft_size = context->conf.fft_size;
+    values->temporal_window = context->conf.temporal_window;
+    values->min_overall_snr = context->conf.min_overall_SNR;
+    values->calculation_rate = context->conf.calculation_rate;
+    values->min_frequency = context->conf.min_frequency;
+    values->max_frequency = context->conf.max_frequency;
+    values->root_frequency_error = context->conf.root_frequency_error;
+    values->optimize_internal_parameters = context->conf.optimize_internal_parameters;
+    return 0;
+}
+
+int lingot_pyqt_context_set_config_values(lingot_pyqt_context_t* context,
+                                          const lingot_pyqt_config_values_t* values) {
+    if (!context || !values) {
+        return -1;
+    }
+    if (values->min_frequency < 0.0
+            || values->max_frequency <= values->min_frequency
+            || values->calculation_rate <= 0.0
+            || values->temporal_window < 0.0
+            || values->fft_size < 256) {
+        return -1;
+    }
+
+    context->conf.audio_system_index = values->audio_system_index;
+    context->conf.fft_size = values->fft_size;
+    context->conf.temporal_window = values->temporal_window;
+    context->conf.min_overall_SNR = values->min_overall_snr;
+    context->conf.calculation_rate = values->calculation_rate;
+    context->conf.min_frequency = values->min_frequency;
+    context->conf.max_frequency = values->max_frequency;
+    context->conf.root_frequency_error = values->root_frequency_error;
+    context->conf.optimize_internal_parameters = values->optimize_internal_parameters;
+    lingot_config_update_internal_params(&context->conf);
+    return 0;
+}
+
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context) {
     if (!context) {
         return -1;

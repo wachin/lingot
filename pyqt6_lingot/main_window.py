@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QActionGroup
 from PyQt6.QtWidgets import (
@@ -16,7 +14,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .bindings import LingotContext, Snapshot
+from .bindings import LingotContext, LingotLibraryError, Snapshot
+from .config_dialog import ConfigDialog
 from .widgets.gauge import GaugeWidget
 from .widgets.spectrum import SpectrumWidget
 from .widgets.strobe_disc import StrobeDiscWidget
@@ -185,18 +184,54 @@ class MainWindow(QMainWindow):
         self.gauge.hide()
 
     def _open_config(self) -> None:
-        QMessageBox.information(self, "Lingot", "Configuration editing is planned next.")
+        if self.context is None:
+            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            return
+
+        filename, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            "Open Configuration File",
+            self.config_filename or "",
+            "Lingot configuration files (*.conf)",
+        )
+        if not filename:
+            return
+
+        try:
+            self.context.load_config(filename)
+            self.context.restart()
+            self.config_filename = filename
+        except LingotLibraryError as exc:
+            QMessageBox.warning(self, "Lingot", str(exc))
 
     def _save_config(self) -> None:
-        QFileDialog.getSaveFileName(
+        if self.context is None:
+            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            return
+
+        filename, _selected_filter = QFileDialog.getSaveFileName(
             self,
             "Save Configuration File",
             self.config_filename or "",
             "Lingot configuration files (*.conf)",
         )
+        if not filename:
+            return
+        if not filename.endswith(".conf"):
+            filename = f"{filename}.conf"
+
+        try:
+            self.context.save_config(filename)
+            self.config_filename = filename
+        except LingotLibraryError as exc:
+            QMessageBox.warning(self, "Lingot", str(exc))
 
     def _preferences(self) -> None:
-        QMessageBox.information(self, "Lingot", "The PyQt6 preferences dialog is planned next.")
+        if self.context is None:
+            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            return
+        dialog = ConfigDialog(self.context, self)
+        dialog.exec()
 
     def _about(self) -> None:
         QMessageBox.about(
