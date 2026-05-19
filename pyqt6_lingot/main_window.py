@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import time
+from pathlib import Path
+
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QActionGroup, QIcon
 from PyQt6.QtWidgets import (
+    QDialog,
     QFileDialog,
     QFrame,
     QLabel,
@@ -46,6 +50,8 @@ class MainWindow(QMainWindow):
         self.config_filename = config_filename
         self.current_snapshot = Snapshot()
         self.show_gauge = True
+        self._last_status = ""
+        self._temporary_status_until = 0.0
 
         self.setWindowTitle("Lingot")
         if APP_ICON_PATH.exists():
@@ -63,6 +69,7 @@ class MainWindow(QMainWindow):
         self._build_actions()
         self._build_layout()
         self._restore_ui_settings()
+        self._update_engine_status()
         self._build_timers()
 
     def _build_actions(self) -> None:
@@ -191,6 +198,7 @@ class MainWindow(QMainWindow):
             self.frequency_label.setText("engine offline")
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
+            self._set_status("Engine offline")
             return
 
         self.current_snapshot = self.context.snapshot()
@@ -204,14 +212,17 @@ class MainWindow(QMainWindow):
             self.frequency_label.setText("not running")
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
+            self._set_status(f"Engine stopped - {self._config_status_text()}")
         elif self.current_snapshot.has_pitch:
             self.frequency_label.setText(f"{self.current_snapshot.frequency:.2f} Hz")
             self.tone_label.setText(self.current_snapshot.note_name or "--")
             self.error_label.setText(f"{self.current_snapshot.error_cents:+.2f} cents")
+            self._set_status(f"Listening - {self._config_status_text()}")
         else:
             self.frequency_label.setText("-- Hz")
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
+            self._set_status(f"Listening - {self._config_status_text()}")
 
     def _dispatch_messages(self) -> None:
         if self.context is None:
@@ -256,6 +267,8 @@ class MainWindow(QMainWindow):
             self.context.load_config(filename)
             self.context.restart()
             self.config_filename = filename
+            self._update_engine_status()
+            self._show_temporary_status(f"Loaded configuration: {self._config_display_name()}")
         except LingotLibraryError as exc:
             QMessageBox.warning(self, "Lingot", str(exc))
 
@@ -278,6 +291,8 @@ class MainWindow(QMainWindow):
         try:
             self.context.save_config(filename)
             self.config_filename = filename
+            self._update_engine_status()
+            self._show_temporary_status(f"Saved configuration: {self._config_display_name()}")
         except LingotLibraryError as exc:
             QMessageBox.warning(self, "Lingot", str(exc))
 
@@ -286,7 +301,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
             return
         dialog = ConfigDialog(self.context, self, ui_settings=self.ui_settings)
-        dialog.exec()
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._update_engine_status()
+            self._show_temporary_status("Preferences applied")
 
     def _about(self) -> None:
         QMessageBox.about(
@@ -329,3 +346,29 @@ class MainWindow(QMainWindow):
             self.bindings.save_ui_settings()
         except LingotLibraryError:
             pass
+
+    def _config_display_name(self) -> str:
+        if not self.config_filename:
+            return "default"
+        return Path(self.config_filename).name
+
+    def _config_status_text(self) -> str:
+        return f"Config: {self._config_display_name()}"
+
+    def _set_status(self, message: str) -> None:
+        if time.monotonic() < self._temporary_status_until:
+            return
+        if message == self._last_status:
+            return
+        self._last_status = message
+        self.statusBar().showMessage(message)
+
+    def _show_temporary_status(self, message: str, timeout_ms: int = 5000) -> None:
+        self._temporary_status_until = time.monotonic() + timeout_ms / 1000.0
+        self.statusBar().showMessage(message, timeout_ms)
+
+    def _update_engine_status(self) -> None:
+        if self.context is None:
+            self._set_status("Engine offline")
+        else:
+            self._set_status(f"Starting - {self._config_status_text()}")

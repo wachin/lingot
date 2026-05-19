@@ -205,6 +205,8 @@ Required behavior:
 - Stop/destroy core on close.
 - Restart core after applying config changes.
 
+[x] Add status-bar feedback for engine state, active configuration, and user actions.
+
 ## Phase 4: Port Custom Visual Widgets
 
 [ ] Port gauge drawing from Cairo/GTK to `QPainter`.
