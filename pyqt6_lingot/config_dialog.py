@@ -7,13 +7,19 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLineEdit,
     QMessageBox,
+    QPushButton,
     QTabWidget,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from .bindings import ConfigValues, LingotContext, LingotLibraryError
+from .bindings import ConfigValues, LingotContext, LingotLibraryError, Scale, ScaleNote
 
 
 class ConfigDialog(QDialog):
@@ -33,6 +39,7 @@ class ConfigDialog(QDialog):
         tabs.addTab(self._build_input_tab(), "Input")
         tabs.addTab(self._build_algorithm_tab(), "Algorithm")
         tabs.addTab(self._build_frequency_tab(), "Frequency")
+        tabs.addTab(self._build_scale_tab(), "Scale")
         root.addWidget(tabs)
 
         buttons = QDialogButtonBox(
@@ -125,6 +132,42 @@ class ConfigDialog(QDialog):
         form.addRow("Root frequency error", self.root_frequency_error)
         return page
 
+    def _build_scale_tab(self) -> QWidget:
+        page = QWidget()
+        root = QVBoxLayout(page)
+
+        scale_form = QFormLayout()
+        self.scale_name = QLineEdit()
+        self.scale_base_frequency = QDoubleSpinBox()
+        self.scale_base_frequency.setRange(1.0, 22050.0)
+        self.scale_base_frequency.setDecimals(6)
+        self.scale_base_frequency.setSingleStep(1.0)
+        self.scale_base_frequency.setSuffix(" Hz")
+        scale_form.addRow("Name", self.scale_name)
+        scale_form.addRow("Base frequency", self.scale_base_frequency)
+        root.addLayout(scale_form)
+
+        self.scale_table = QTableWidget(0, 2)
+        self.scale_table.setHorizontalHeaderLabels(["Note", "Cents"])
+        self.scale_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
+        self.scale_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.ResizeMode.ResizeToContents
+        )
+        root.addWidget(self.scale_table)
+
+        buttons = QHBoxLayout()
+        self.scale_add_button = QPushButton("Add")
+        self.scale_remove_button = QPushButton("Remove")
+        self.scale_add_button.clicked.connect(self._add_scale_row)
+        self.scale_remove_button.clicked.connect(self._remove_scale_row)
+        buttons.addWidget(self.scale_add_button)
+        buttons.addWidget(self.scale_remove_button)
+        buttons.addStretch()
+        root.addLayout(buttons)
+        return page
+
     def _load_values(self, values: ConfigValues) -> None:
         system_index = self.audio_system.findData(values.audio_system_index)
         self.audio_system.setCurrentIndex(max(0, system_index))
@@ -145,6 +188,7 @@ class ConfigDialog(QDialog):
         self.max_frequency.setValue(values.max_frequency)
         self.root_frequency_error.setValue(values.root_frequency_error)
         self.optimize_parameters.setChecked(bool(values.optimize_internal_parameters))
+        self._load_scale(self.context.scale())
 
     def _refresh_audio_devices(self) -> None:
         previous = self.audio_device.currentText() if hasattr(self, "audio_device") else ""
@@ -174,6 +218,74 @@ class ConfigDialog(QDialog):
         values.optimize_internal_parameters = int(self.optimize_parameters.isChecked())
         return values
 
+    def _load_scale(self, scale: Scale) -> None:
+        self.scale_name.setText(scale.name)
+        self.scale_base_frequency.setValue(scale.base_frequency)
+        self.scale_table.setRowCount(0)
+        for note in scale.notes:
+            self._add_scale_row(note)
+
+    def _add_scale_row(self, note: ScaleNote | None = None) -> None:
+        row = self.scale_table.rowCount()
+        self.scale_table.insertRow(row)
+        if note is None:
+            previous = self._scale_row_cents(row - 1) if row > 0 else 0.0
+            note = ScaleNote("?", min(previous + 100.0, 1199.0))
+        self.scale_table.setItem(row, 0, QTableWidgetItem(note.name))
+        self.scale_table.setItem(row, 1, QTableWidgetItem(f"{note.cents:.6f}"))
+
+    def _remove_scale_row(self) -> None:
+        row = self.scale_table.currentRow()
+        if row <= 0:
+            QMessageBox.warning(self, "Scale", "The reference note cannot be removed.")
+            return
+        self.scale_table.removeRow(row)
+
+    def _scale_row_cents(self, row: int) -> float:
+        if row < 0:
+            return 0.0
+        item = self.scale_table.item(row, 1)
+        if item is None:
+            return 0.0
+        return float(item.text())
+
+    def _collect_scale(self) -> Scale:
+        notes: list[ScaleNote] = []
+        names: set[str] = set()
+        last_cents = -1.0
+
+        for row in range(self.scale_table.rowCount()):
+            name_item = self.scale_table.item(row, 0)
+            cents_item = self.scale_table.item(row, 1)
+            name = name_item.text().strip() if name_item is not None else ""
+            if not name or name == "?" or any(char in name for char in " \t\n{}"):
+                raise LingotLibraryError("Scale note names must be non-empty and cannot contain spaces or braces.")
+            if name in names:
+                raise LingotLibraryError("Scale note names must be unique.")
+            names.add(name)
+
+            try:
+                cents = float(cents_item.text()) if cents_item is not None else 0.0
+            except ValueError as exc:
+                raise LingotLibraryError("Scale cents values must be numbers.") from exc
+            if row == 0 and abs(cents) > 1e-10:
+                raise LingotLibraryError("The reference note must be 0 cents.")
+            if cents < last_cents:
+                raise LingotLibraryError("Scale notes must be ordered by cents.")
+            if cents >= 1200.0:
+                raise LingotLibraryError("Scale notes must stay within one octave.")
+            last_cents = cents
+            notes.append(ScaleNote(name, cents))
+
+        if not notes:
+            raise LingotLibraryError("The scale must contain at least one note.")
+
+        return Scale(
+            self.scale_name.text().strip() or "Untitled scale",
+            self.scale_base_frequency.value(),
+            notes,
+        )
+
     def _apply(self) -> bool:
         if self.min_frequency.value() >= self.max_frequency.value():
             QMessageBox.warning(
@@ -185,8 +297,10 @@ class ConfigDialog(QDialog):
 
         try:
             values = self._collect_values()
+            scale = self._collect_scale()
             self.context.set_config_values(values)
             self.context.set_audio_device(self.audio_device.currentText())
+            self.context.set_scale(scale)
             self.context.restart()
             self.values = self.context.config_values()
         except LingotLibraryError as exc:

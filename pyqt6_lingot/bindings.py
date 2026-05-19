@@ -4,6 +4,7 @@ import ctypes
 import math
 import os
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Iterable
 
 
@@ -44,6 +45,19 @@ class ConfigValues(ctypes.Structure):
         ("root_frequency_error", ctypes.c_double),
         ("optimize_internal_parameters", ctypes.c_int),
     ]
+
+
+@dataclass
+class ScaleNote:
+    name: str
+    cents: float
+
+
+@dataclass
+class Scale:
+    name: str
+    base_frequency: float
+    notes: list[ScaleNote]
 
 
 def _candidate_libraries() -> Iterable[Path | str]:
@@ -119,6 +133,34 @@ class LingotBindings:
             ctypes.c_char_p,
         ]
         self.lib.lingot_pyqt_context_set_audio_device.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_get_scale_info.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_uint),
+        ]
+        self.lib.lingot_pyqt_context_get_scale_info.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_get_scale_note.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_uint,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_double),
+        ]
+        self.lib.lingot_pyqt_context_get_scale_note.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_context_set_scale.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_char_p,
+            ctypes.c_double,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_char_p),
+            ctypes.POINTER(ctypes.c_double),
+        ]
+        self.lib.lingot_pyqt_context_set_scale.restype = ctypes.c_int
 
         self.lib.lingot_pyqt_context_start.argtypes = [ctypes.c_void_p]
         self.lib.lingot_pyqt_context_start.restype = ctypes.c_int
@@ -303,6 +345,68 @@ class LingotContext:
         )
         if result != 0:
             raise LingotLibraryError("Audio device is invalid")
+
+    def scale(self) -> Scale:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+
+        name_buffer = ctypes.create_string_buffer(512)
+        base_frequency = ctypes.c_double()
+        notes_count = ctypes.c_uint()
+        result = self.bindings.lib.lingot_pyqt_context_get_scale_info(
+            self._ptr,
+            name_buffer,
+            len(name_buffer),
+            ctypes.byref(base_frequency),
+            ctypes.byref(notes_count),
+        )
+        if result != 0:
+            raise LingotLibraryError("Could not read scale")
+
+        notes: list[ScaleNote] = []
+        for index in range(notes_count.value):
+            note_buffer = ctypes.create_string_buffer(128)
+            cents = ctypes.c_double()
+            result = self.bindings.lib.lingot_pyqt_context_get_scale_note(
+                self._ptr,
+                index,
+                note_buffer,
+                len(note_buffer),
+                ctypes.byref(cents),
+            )
+            if result != 0:
+                raise LingotLibraryError("Could not read scale note")
+            notes.append(
+                ScaleNote(
+                    note_buffer.value.decode("utf-8", errors="replace"),
+                    cents.value,
+                )
+            )
+
+        return Scale(
+            name_buffer.value.decode("utf-8", errors="replace"),
+            base_frequency.value,
+            notes,
+        )
+
+    def set_scale(self, scale: Scale) -> None:
+        if not self._ptr:
+            raise LingotLibraryError("Lingot context is closed")
+        encoded_names = [note.name.encode("utf-8") for note in scale.notes]
+        names_array = (ctypes.c_char_p * len(encoded_names))(*encoded_names)
+        cents_array = (ctypes.c_double * len(scale.notes))(
+            *[note.cents for note in scale.notes]
+        )
+        result = self.bindings.lib.lingot_pyqt_context_set_scale(
+            self._ptr,
+            scale.name.encode("utf-8"),
+            scale.base_frequency,
+            len(scale.notes),
+            names_array,
+            cents_array,
+        )
+        if result != 0:
+            raise LingotLibraryError("Scale values are invalid")
 
     def pop_message(self) -> tuple[int, int, str] | None:
         text = ctypes.create_string_buffer(1001)

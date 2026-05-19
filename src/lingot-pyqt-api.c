@@ -43,6 +43,15 @@ struct lingot_pyqt_context_t {
 
 static int initialized = 0;
 
+static char* lingot_pyqt_strdup(const char* src) {
+    size_t len = strlen(src) + 1;
+    char* dst = malloc(len);
+    if (dst) {
+        memcpy(dst, src, len);
+    }
+    return dst;
+}
+
 static int lingot_pyqt_mkdir_if_missing(const char* path) {
     if (mkdir(path, 0777) == 0 || errno == EEXIST) {
         return 0;
@@ -218,6 +227,91 @@ int lingot_pyqt_context_set_audio_device(lingot_pyqt_context_t* context,
     }
     snprintf(context->conf.audio_dev[index], sizeof(context->conf.audio_dev[index]),
              "%s", device);
+    return 0;
+}
+
+int lingot_pyqt_context_get_scale_info(lingot_pyqt_context_t* context,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* base_frequency,
+                                       unsigned int* notes) {
+    if (!context || !name_dst || name_dst_len == 0 || !base_frequency || !notes) {
+        return -1;
+    }
+    snprintf(name_dst, name_dst_len, "%s",
+             context->conf.scale.name ? context->conf.scale.name : "");
+    *base_frequency = context->conf.scale.base_frequency;
+    *notes = context->conf.scale.notes;
+    return 0;
+}
+
+int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
+                                       unsigned int index,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* cents) {
+    if (!context || !name_dst || name_dst_len == 0 || !cents
+            || index >= context->conf.scale.notes) {
+        return -1;
+    }
+    snprintf(name_dst, name_dst_len, "%s",
+             context->conf.scale.note_name[index]
+                ? context->conf.scale.note_name[index] : "");
+    *cents = context->conf.scale.offset_cents[index];
+    return 0;
+}
+
+int lingot_pyqt_context_set_scale(lingot_pyqt_context_t* context,
+                                  const char* name,
+                                  LINGOT_FLT base_frequency,
+                                  unsigned int notes,
+                                  const char** note_names,
+                                  const LINGOT_FLT* cents) {
+    if (!context || !name || !note_names || !cents
+            || notes < 1 || notes > 128 || base_frequency <= 0.0) {
+        return -1;
+    }
+    if (fabs(cents[0]) > 1e-10) {
+        return -1;
+    }
+
+    LINGOT_FLT last_cents = -1.0;
+    unsigned int i;
+    for (i = 0; i < notes; i++) {
+        if (!note_names[i] || !note_names[i][0]
+                || strchr(note_names[i], ' ')
+                || strchr(note_names[i], '\t')
+                || strchr(note_names[i], '\n')
+                || strchr(note_names[i], '{')
+                || strchr(note_names[i], '}')) {
+            return -1;
+        }
+        if (cents[i] < last_cents || cents[i] >= 1200.0) {
+            return -1;
+        }
+        unsigned int j;
+        for (j = i + 1; j < notes; j++) {
+            if (note_names[j] && strcmp(note_names[i], note_names[j]) == 0) {
+                return -1;
+            }
+        }
+        last_cents = cents[i];
+    }
+
+    lingot_config_scale_destroy(&context->conf.scale);
+    context->conf.scale.name = lingot_pyqt_strdup(name);
+    lingot_config_scale_allocate(&context->conf.scale, (unsigned short int) notes);
+    context->conf.scale.base_frequency = base_frequency;
+
+    for (i = 0; i < notes; i++) {
+        context->conf.scale.note_name[i] = lingot_pyqt_strdup(note_names[i]);
+        context->conf.scale.offset_cents[i] = cents[i];
+        context->conf.scale.offset_ratios[0][i] = -1;
+        context->conf.scale.offset_ratios[1][i] = -1;
+    }
+    context->conf.scale.offset_ratios[0][0] = 1;
+    context->conf.scale.offset_ratios[1][0] = 1;
+    lingot_config_update_internal_params(&context->conf);
     return 0;
 }
 

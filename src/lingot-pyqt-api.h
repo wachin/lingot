@@ -63,6 +63,22 @@ int lingot_pyqt_context_get_audio_device(lingot_pyqt_context_t* context,
                                          unsigned int dst_len);
 int lingot_pyqt_context_set_audio_device(lingot_pyqt_context_t* context,
                                          const char* device);
+int lingot_pyqt_context_get_scale_info(lingot_pyqt_context_t* context,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* base_frequency,
+                                       unsigned int* notes);
+int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
+                                       unsigned int index,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* cents);
+int lingot_pyqt_context_set_scale(lingot_pyqt_context_t* context,
+                                  const char* name,
+                                  LINGOT_FLT base_frequency,
+                                  unsigned int notes,
+                                  const char** note_names,
+                                  const LINGOT_FLT* cents);
 
 int lingot_pyqt_context_start(lingot_pyqt_context_t* context);
 void lingot_pyqt_context_stop(lingot_pyqt_context_t* context);
