@@ -13,6 +13,7 @@ class SpectrumWidget(QWidget):
         self.samples: list[float] = []
         self.max_frequency = 22050.0
         self.frequency = 0.0
+        self.target_frequency = 0.0
         self.noise_threshold = 10.0
         self.min_db = 0.0
         self.max_db = 52.0
@@ -24,6 +25,10 @@ class SpectrumWidget(QWidget):
 
     def set_frequency(self, frequency: float) -> None:
         self.frequency = max(0.0, frequency)
+        self.update()
+
+    def set_target_frequency(self, frequency: float) -> None:
+        self.target_frequency = max(0.0, frequency)
         self.update()
 
     def set_scale(self, max_frequency: float, noise_threshold: float) -> None:
@@ -58,7 +63,7 @@ class SpectrumWidget(QWidget):
 
         self._draw_spectrum(painter, plot)
         self._draw_noise_threshold(painter, plot)
-        self._draw_frequency_marker(painter, plot)
+        self._draw_frequency_markers(painter, plot)
 
     def _format_frequency(self, frequency_hz: float) -> str:
         if frequency_hz == 0.0:
@@ -169,10 +174,13 @@ class SpectrumWidget(QWidget):
         painter.setPen(pen)
         painter.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y))
 
-    def _draw_frequency_marker(self, painter: QPainter, plot: QRectF) -> None:
-        if self.frequency <= 0.0:
-            return
-        x = self._frequency_to_x(self.frequency, plot)
-        pen = QPen(QColor(255, 33, 33), 2, Qt.PenStyle.DashLine, Qt.PenCapStyle.RoundCap)
-        painter.setPen(pen)
-        painter.drawLine(QPointF(x, plot.bottom()), QPointF(x, plot.top()))
+    def _draw_frequency_markers(self, painter: QPainter, plot: QRectF) -> None:
+        if self.target_frequency > 0.0:
+            x = self._frequency_to_x(self.target_frequency, plot)
+            painter.setPen(QPen(QColor(59, 212, 255), 1, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.drawLine(QPointF(x, plot.bottom()), QPointF(x, plot.top()))
+
+        if self.frequency > 0.0:
+            x = self._frequency_to_x(self.frequency, plot)
+            painter.setPen(QPen(QColor(255, 33, 33), 2, Qt.PenStyle.DashLine, Qt.PenCapStyle.RoundCap))
+            painter.drawLine(QPointF(x, plot.bottom()), QPointF(x, plot.top()))

@@ -16,6 +16,7 @@ class Snapshot(ctypes.Structure):
     _fields_ = [
         ("running", ctypes.c_int),
         ("frequency", ctypes.c_double),
+        ("target_frequency", ctypes.c_double),
         ("error_cents", ctypes.c_double),
         ("closest_note_index", ctypes.c_int),
         ("closest_note_name", ctypes.c_char_p),
@@ -141,6 +142,11 @@ class LingotBindings:
         ]
         self.lib.lingot_pyqt_context_set_config_values.restype = ctypes.c_int
 
+        self.lib.lingot_pyqt_get_default_config_values.argtypes = [
+            ctypes.POINTER(ConfigValues),
+        ]
+        self.lib.lingot_pyqt_get_default_config_values.restype = ctypes.c_int
+
         self.lib.lingot_pyqt_context_get_audio_device.argtypes = [
             ctypes.c_void_p,
             ctypes.c_char_p,
@@ -173,6 +179,24 @@ class LingotBindings:
             ctypes.POINTER(ctypes.c_double),
         ]
         self.lib.lingot_pyqt_context_get_scale_note.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_get_default_scale_info.argtypes = [
+            ctypes.c_char_p,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_double),
+            ctypes.POINTER(ctypes.c_uint),
+        ]
+        self.lib.lingot_pyqt_get_default_scale_info.restype = ctypes.c_int
+
+        self.lib.lingot_pyqt_get_default_scale_note.argtypes = [
+            ctypes.c_uint,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+            ctypes.POINTER(ctypes.c_double),
+        ]
+        self.lib.lingot_pyqt_get_default_scale_note.restype = ctypes.c_int
 
         self.lib.lingot_pyqt_context_set_scale.argtypes = [
             ctypes.c_void_p,
@@ -301,6 +325,53 @@ class LingotBindings:
                 devices.append(text.value.decode("utf-8", errors="replace"))
         return devices
 
+    def default_config_values(self) -> ConfigValues:
+        values = ConfigValues()
+        if self.lib.lingot_pyqt_get_default_config_values(ctypes.byref(values)) != 0:
+            raise LingotLibraryError("Could not read default configuration values")
+        return values
+
+    def default_scale(self) -> Scale:
+        name_buffer = ctypes.create_string_buffer(512)
+        base_frequency = ctypes.c_double()
+        notes_count = ctypes.c_uint()
+        result = self.lib.lingot_pyqt_get_default_scale_info(
+            name_buffer,
+            len(name_buffer),
+            ctypes.byref(base_frequency),
+            ctypes.byref(notes_count),
+        )
+        if result != 0:
+            raise LingotLibraryError("Could not read default scale")
+
+        notes: list[ScaleNote] = []
+        for index in range(notes_count.value):
+            note_buffer = ctypes.create_string_buffer(128)
+            shift_buffer = ctypes.create_string_buffer(128)
+            cents = ctypes.c_double()
+            result = self.lib.lingot_pyqt_get_default_scale_note(
+                index,
+                note_buffer,
+                len(note_buffer),
+                shift_buffer,
+                len(shift_buffer),
+                ctypes.byref(cents),
+            )
+            if result != 0:
+                raise LingotLibraryError("Could not read default scale note")
+            notes.append(
+                ScaleNote(
+                    note_buffer.value.decode("utf-8", errors="replace"),
+                    cents.value,
+                    shift_buffer.value.decode("utf-8", errors="replace"),
+                )
+            )
+        return Scale(
+            name_buffer.value.decode("utf-8", errors="replace"),
+            base_frequency.value,
+            notes,
+        )
+
 
 class LingotContext:
     def __init__(self, bindings: LingotBindings) -> None:
@@ -385,6 +456,12 @@ class LingotContext:
 
     def audio_devices(self, audio_system_index: int) -> list[str]:
         return self.bindings.audio_devices(audio_system_index)
+
+    def default_config_values(self) -> ConfigValues:
+        return self.bindings.default_config_values()
+
+    def default_scale(self) -> Scale:
+        return self.bindings.default_scale()
 
     def audio_device(self) -> str:
         if not self._ptr:

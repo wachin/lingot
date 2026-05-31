@@ -27,6 +27,7 @@ typedef struct lingot_pyqt_context_t lingot_pyqt_context_t;
 typedef struct {
     int running;
     LINGOT_FLT frequency;
+    LINGOT_FLT target_frequency;
     LINGOT_FLT error_cents;
     int closest_note_index;
     const char* closest_note_name;
@@ -75,6 +76,7 @@ int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
                                           lingot_pyqt_config_values_t* values);
 int lingot_pyqt_context_set_config_values(lingot_pyqt_context_t* context,
                                           const lingot_pyqt_config_values_t* values);
+int lingot_pyqt_get_default_config_values(lingot_pyqt_config_values_t* values);
 int lingot_pyqt_context_get_audio_device(lingot_pyqt_context_t* context,
                                          char* dst,
                                          unsigned int dst_len);
@@ -87,6 +89,16 @@ int lingot_pyqt_context_get_scale_info(lingot_pyqt_context_t* context,
                                        unsigned int* notes);
 int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
                                        unsigned int index,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       char* shift_dst,
+                                       unsigned int shift_dst_len,
+                                       LINGOT_FLT* cents);
+int lingot_pyqt_get_default_scale_info(char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* base_frequency,
+                                       unsigned int* notes);
+int lingot_pyqt_get_default_scale_note(unsigned int index,
                                        char* name_dst,
                                        unsigned int name_dst_len,
                                        char* shift_dst,

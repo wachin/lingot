@@ -43,6 +43,8 @@ struct lingot_pyqt_context_t {
 };
 
 static int initialized = 0;
+static lingot_config_t default_conf;
+static int default_conf_initialized = 0;
 
 static char* lingot_pyqt_strdup(const char* src) {
     size_t len = strlen(src) + 1;
@@ -58,6 +60,31 @@ static int lingot_pyqt_mkdir_if_missing(const char* path) {
         return 0;
     }
     return -1;
+}
+
+static void lingot_pyqt_config_values_from_config(const lingot_config_t* config,
+                                                  lingot_pyqt_config_values_t* values) {
+    memset(values, 0, sizeof(*values));
+    values->audio_system_index = config->audio_system_index;
+    values->fft_size = config->fft_size;
+    values->temporal_window = config->temporal_window;
+    values->min_overall_snr = config->min_overall_SNR;
+    values->calculation_rate = config->calculation_rate;
+    values->min_frequency = config->min_frequency;
+    values->max_frequency = config->max_frequency;
+    values->root_frequency_error = config->root_frequency_error;
+    values->optimize_internal_parameters = config->optimize_internal_parameters;
+    values->sample_rate = config->sample_rate;
+    values->oversampling = config->oversampling;
+    values->gauge_range = config->gauge_range;
+}
+
+static void lingot_pyqt_ensure_default_config(void) {
+    if (!default_conf_initialized) {
+        lingot_config_new(&default_conf);
+        default_conf_initialized = 1;
+    }
+    lingot_config_restore_default_values(&default_conf);
 }
 
 int lingot_pyqt_initialize(const char* config_name) {
@@ -163,19 +190,16 @@ int lingot_pyqt_context_get_config_values(lingot_pyqt_context_t* context,
         return -1;
     }
 
-    memset(values, 0, sizeof(*values));
-    values->audio_system_index = context->conf.audio_system_index;
-    values->fft_size = context->conf.fft_size;
-    values->temporal_window = context->conf.temporal_window;
-    values->min_overall_snr = context->conf.min_overall_SNR;
-    values->calculation_rate = context->conf.calculation_rate;
-    values->min_frequency = context->conf.min_frequency;
-    values->max_frequency = context->conf.max_frequency;
-    values->root_frequency_error = context->conf.root_frequency_error;
-    values->optimize_internal_parameters = context->conf.optimize_internal_parameters;
-    values->sample_rate = context->conf.sample_rate;
-    values->oversampling = context->conf.oversampling;
-    values->gauge_range = context->conf.gauge_range;
+    lingot_pyqt_config_values_from_config(&context->conf, values);
+    return 0;
+}
+
+int lingot_pyqt_get_default_config_values(lingot_pyqt_config_values_t* values) {
+    if (!values) {
+        return -1;
+    }
+    lingot_pyqt_ensure_default_config();
+    lingot_pyqt_config_values_from_config(&default_conf, values);
     return 0;
 }
 
@@ -269,6 +293,44 @@ int lingot_pyqt_context_get_scale_note(lingot_pyqt_context_t* context,
                                      context->conf.scale.offset_ratios[0][index],
                                      context->conf.scale.offset_ratios[1][index]);
     *cents = context->conf.scale.offset_cents[index];
+    return 0;
+}
+
+int lingot_pyqt_get_default_scale_info(char* name_dst,
+                                       unsigned int name_dst_len,
+                                       LINGOT_FLT* base_frequency,
+                                       unsigned int* notes) {
+    if (!name_dst || name_dst_len == 0 || !base_frequency || !notes) {
+        return -1;
+    }
+    lingot_pyqt_ensure_default_config();
+    snprintf(name_dst, name_dst_len, "%s",
+             default_conf.scale.name ? default_conf.scale.name : "");
+    *base_frequency = default_conf.scale.base_frequency;
+    *notes = default_conf.scale.notes;
+    return 0;
+}
+
+int lingot_pyqt_get_default_scale_note(unsigned int index,
+                                       char* name_dst,
+                                       unsigned int name_dst_len,
+                                       char* shift_dst,
+                                       unsigned int shift_dst_len,
+                                       LINGOT_FLT* cents) {
+    lingot_pyqt_ensure_default_config();
+    if (!name_dst || name_dst_len == 0
+            || !shift_dst || shift_dst_len == 0 || !cents
+            || index >= default_conf.scale.notes) {
+        return -1;
+    }
+    snprintf(name_dst, name_dst_len, "%s",
+             default_conf.scale.note_name[index]
+                ? default_conf.scale.note_name[index] : "");
+    lingot_config_scale_format_shift(shift_dst,
+                                     default_conf.scale.offset_cents[index],
+                                     default_conf.scale.offset_ratios[0][index],
+                                     default_conf.scale.offset_ratios[1][index]);
+    *cents = default_conf.scale.offset_cents[index];
     return 0;
 }
 
@@ -494,6 +556,8 @@ int lingot_pyqt_context_get_snapshot(lingot_pyqt_context_t* context,
         const int note_index = lingot_config_scale_get_note_index(
                     &context->conf.scale, snapshot->closest_note_index);
         snapshot->closest_note_name = context->conf.scale.note_name[note_index];
+        snapshot->target_frequency = lingot_config_scale_get_frequency(
+                    &context->conf.scale, snapshot->closest_note_index);
     }
 
     return 0;

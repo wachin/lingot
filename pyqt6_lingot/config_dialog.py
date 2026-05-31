@@ -40,7 +40,7 @@ class ConfigDialog(QDialog):
         self.original_scale = context.scale()
         self._context_scale_changed_during_dialog = False
         self._build_ui()
-        self._load_values(self.values)
+        self._load_values(self.values, self.original_scale, self.context.audio_device())
         self._restore_ui_settings()
 
     def _build_ui(self) -> None:
@@ -56,12 +56,16 @@ class ConfigDialog(QDialog):
             QDialogButtonBox.StandardButton.Ok
             | QDialogButtonBox.StandardButton.Apply
             | QDialogButtonBox.StandardButton.Cancel
+            | QDialogButtonBox.StandardButton.RestoreDefaults
         )
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
         apply_button = buttons.button(QDialogButtonBox.StandardButton.Apply)
         if apply_button is not None:
             apply_button.clicked.connect(self._apply)
+        defaults_button = buttons.button(QDialogButtonBox.StandardButton.RestoreDefaults)
+        if defaults_button is not None:
+            defaults_button.clicked.connect(self._restore_defaults)
         root.addWidget(buttons)
 
     def _restore_ui_settings(self) -> None:
@@ -190,11 +194,16 @@ class ConfigDialog(QDialog):
         root.addLayout(buttons)
         return page
 
-    def _load_values(self, values: ConfigValues) -> None:
+    def _load_values(
+        self,
+        values: ConfigValues,
+        scale: Scale | None = None,
+        audio_device: str | None = None,
+    ) -> None:
         system_index = self.audio_system.findData(values.audio_system_index)
         self.audio_system.setCurrentIndex(max(0, system_index))
         self._refresh_audio_devices()
-        current_device = self.context.audio_device()
+        current_device = audio_device if audio_device is not None else self.audio_device.currentText()
         device_index = self.audio_device.findText(current_device)
         if device_index >= 0:
             self.audio_device.setCurrentIndex(device_index)
@@ -210,7 +219,8 @@ class ConfigDialog(QDialog):
         self.max_frequency.setValue(values.max_frequency)
         self.root_frequency_error.setValue(values.root_frequency_error)
         self.optimize_parameters.setChecked(bool(values.optimize_internal_parameters))
-        self._load_scale(self.context.scale())
+        if scale is not None:
+            self._load_scale(scale)
 
     def _refresh_audio_devices(self) -> None:
         previous = self.audio_device.currentText() if hasattr(self, "audio_device") else ""
@@ -328,6 +338,13 @@ class ConfigDialog(QDialog):
             QMessageBox.warning(self, "Lingot", str(exc))
             return False
         return True
+
+    def _restore_defaults(self) -> None:
+        try:
+            default_scale = self.context.default_scale()
+            self._load_values(self.context.default_config_values(), default_scale, "")
+        except LingotLibraryError as exc:
+            QMessageBox.warning(self, "Lingot", str(exc))
 
     def _accept(self) -> None:
         if self._apply():

@@ -217,6 +217,8 @@ Source reference: `src/lingot-gui-gauge.c`.
 
 Source reference: `src/lingot-gui-spectrum.c`.
 
+[x] Add current-frequency and target-frequency markers to the PyQt6 spectrum.
+
 [x] Port strobe disc drawing from Cairo/GTK to `QPainter`.
 
 Source reference: `src/lingot-gui-strobe-disc.c`.
@@ -289,10 +291,10 @@ Required behavior:
 
 - Reject invalid min/max frequency.
 - Reject invalid or incomplete scale data.
-- Apply defaults.
-- Apply without closing.
-- OK applies and closes.
-- Cancel closes without changing the running core.
+- Apply defaults. [x]
+- Apply without closing. [x]
+- OK applies and closes. [x]
+- Cancel closes without changing the running core. [x]
 
 ## Phase 6: Internationalization
 

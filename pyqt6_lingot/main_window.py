@@ -206,6 +206,7 @@ class MainWindow(QMainWindow):
         self.gauge.set_error(self.current_snapshot.error_cents)
         self.strobe.set_error(self.current_snapshot.error_cents)
         self.spectrum.set_frequency(self.current_snapshot.frequency)
+        self.spectrum.set_target_frequency(self.current_snapshot.target_frequency)
 
         if self.current_snapshot.running and self.current_snapshot.spectrum_size:
             self.spectrum.set_samples(self.context.spectrum(self.current_snapshot.spectrum_size))
