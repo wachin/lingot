@@ -159,6 +159,7 @@ dist_pyqt6_lingot_PYTHON = \
   pyqt6_lingot/app.py \
   pyqt6_lingot/bindings.py \
   pyqt6_lingot/config_dialog.py \
+  pyqt6_lingot/i18n.py \
   pyqt6_lingot/main_window.py \
   pyqt6_lingot/metadata.py
 
@@ -234,6 +235,7 @@ EXTRA_DIST = \
   bootstrap \
   lingot-pyqt6 \
   lingot.pc.in \
+  pyproject.toml \
   test/resources/lingot-001.conf \
   test/resources/lingot-0_9_2b8.conf \
   test/resources/lingot-1_0_2b.conf \
