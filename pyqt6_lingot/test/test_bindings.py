@@ -293,5 +293,127 @@ class TestPopMessage(unittest.TestCase):
             self.assertIsInstance(result[2], str)
 
 
+@unittest.skipUnless(HAS_LIBRARY, "liblingot.so not available")
+class TestConfigFileCompatibility(unittest.TestCase):
+    """Verify that existing config files from test/resources/ load correctly.
+
+    This covers Milestone 6: existing config files and UI settings remain compatible.
+    """
+
+    RESOURCES = Path(__file__).resolve().parent.parent.parent / "test" / "resources"
+
+    def _load_and_verify(self, config_path: str) -> None:
+        """Load a config file and verify the context can read values from it."""
+        bindings = LingotBindings()
+        bindings.initialize(None)
+        ctx = LingotContext(bindings)
+        try:
+            ctx.load_config(config_path)
+            values = ctx.config_values()
+            self.assertIsNotNone(values)
+            self.assertGreater(values.fft_size, 0, f"FFT size should be > 0 for {config_path}")
+            scale = ctx.scale()
+            self.assertIsNotNone(scale)
+            self.assertGreater(len(scale.notes), 0, f"Scale should have notes for {config_path}")
+            self.assertGreater(scale.base_frequency, 0.0, f"Base frequency should be > 0 for {config_path}")
+        finally:
+            ctx.close()
+
+    def test_load_001(self) -> None:
+        path = str(self.RESOURCES / "lingot-001.conf")
+        self._load_and_verify(path)
+
+    def test_load_0_9_2b8(self) -> None:
+        path = str(self.RESOURCES / "lingot-0_9_2b8.conf")
+        self._load_and_verify(path)
+
+    def test_load_1_0_2b(self) -> None:
+        path = str(self.RESOURCES / "lingot-1_0_2b.conf")
+        self._load_and_verify(path)
+
+    def test_load_1_1_0(self) -> None:
+        path = str(self.RESOURCES / "lingot-1_1_0.conf")
+        self._load_and_verify(path)
+
+    def test_load_config_with_context_restart(self) -> None:
+        """Load a legacy config and restart to verify full lifecycle."""
+        path = str(self.RESOURCES / "lingot-1_1_0.conf")
+        bindings = LingotBindings()
+        bindings.initialize(None)
+        ctx = LingotContext(bindings)
+        try:
+            ctx.load_config(path)
+            ctx.start()
+            # Give the engine a moment to process
+            snap = ctx.snapshot()
+            self.assertIsNotNone(snap)
+            ctx.stop()
+        finally:
+            ctx.close()
+
+    def test_load_all_configs_and_save_to_temp(self) -> None:
+        """Load each config, save it to a temp file, and reload to verify round-trip.
+
+        Legacy configs may have parse errors (deprecated options, missing audio
+        systems) that prevent saving.  In that case the config is verified for
+        load-only compatibility.
+        """
+        import tempfile
+        import os
+
+        bindings = LingotBindings()
+        bindings.initialize(None)
+
+        for conf_file in sorted(self.RESOURCES.glob("*.conf")):
+            path = str(conf_file)
+            ctx = LingotContext(bindings)
+            try:
+                ctx.load_config(path)
+                values = ctx.config_values()
+                scale = ctx.scale()
+                self.assertIsNotNone(values)
+                self.assertGreater(scale.base_frequency, 0.0)
+
+                # Attempt save to a temporary file
+                fd, tmp_path = tempfile.mkstemp(suffix=".conf")
+                os.close(fd)
+                try:
+                    try:
+                        ctx.save_config(tmp_path)
+                        save_ok = True
+                    except LingotLibraryError:
+                        save_ok = False
+
+                    if save_ok:
+                        # Reload the saved config
+                        ctx2 = LingotContext(bindings)
+                        try:
+                            ctx2.load_config(tmp_path)
+                            values2 = ctx2.config_values()
+                            scale2 = ctx2.scale()
+                            self.assertEqual(values2.fft_size, values.fft_size,
+                                             f"FFT size mismatch after round-trip for {conf_file.name}")
+                            self.assertEqual(len(scale2.notes), len(scale.notes),
+                                             f"Scale note count mismatch after round-trip for {conf_file.name}")
+                        finally:
+                            ctx2.close()
+                finally:
+                    if os.path.exists(tmp_path):
+                        os.unlink(tmp_path)
+            finally:
+                ctx.close()
+
+    def test_default_config_values_are_valid(self) -> None:
+        """Verify default config values produce a workable configuration."""
+        bindings = LingotBindings()
+        bindings.initialize(None)
+        defaults = bindings.default_config_values()
+        self.assertGreater(defaults.fft_size, 0)
+        self.assertGreater(defaults.temporal_window, 0.0)
+        self.assertGreater(defaults.sample_rate, 0)
+        self.assertGreater(defaults.min_frequency, 0.0)
+        self.assertGreater(defaults.max_frequency, defaults.min_frequency)
+
+
 if __name__ == "__main__":
     unittest.main()

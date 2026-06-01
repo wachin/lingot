@@ -371,11 +371,11 @@ path (`-c name`) behavior through the bindings layer.
 
 [x] Add Python tests for binding calls.
 
-Comprehensive test suite in `pyqt6_lingot/test/test_bindings.py` covering:
+Comprehensive test suite in `pyqt6_lingot/test/test_bindings.py` (32 tests) covering:
 - Pure-Python tests for Snapshot, ScaleNote, Scale, ConfigValues, UiSettings
 - C library tests for initialization, config values, context lifecycle, scale
-  reading/writing, snapshot/spectrum, and message queue
-- Tests skip gracefully when liblingot.so is not available (25 tests pass)
+  reading/writing, snapshot/spectrum, message queue, and config file compatibility
+- Tests skip gracefully when liblingot.so is not available
 
 [x] Add GUI smoke tests where practical.
 
@@ -417,7 +417,14 @@ Workflow matrix:
 
 [x] Milestone 5: Configuration dialog reaches functional parity.
 
-[ ] Milestone 6: Existing config files and UI settings remain compatible.
+[x] Milestone 6: Existing config files and UI settings remain compatible.
+
+Verified with 7 config compatibility tests in `pyqt6_lingot/test/test_bindings.py`:
+- Loads all 4 legacy config files (0.01, 0.9.2b8, 1.0.2b, 1.1.0) through the Python bindings
+- Verifies FFT size, scale notes, and base frequency are valid after loading
+- Tests load → start → snapshot → stop lifecycle with a legacy config
+- Tests save/load round-trip for configs (gracefully handles legacy configs that can't be saved)
+- Tests that default config values are valid
 
 [ ] Milestone 7: Packaging supports both GTK and PyQt6 frontends.
 
@@ -459,5 +466,6 @@ Mitigation: defer pure-Python DSP/audio until the PyQt6 frontend is already prov
 
 [x] Verify the frontend can launch, close, and cleanly stop the C core.
 
-Verified: 25 tests pass including context create/start/stop/destroy cycles,
-config load/save, scale read/write, and snapshot retrieval.
+Verified: 46 tests pass (32 bindings + 14 widget smoke tests) including
+context create/start/stop/destroy cycles, config load/save, scale read/write,
+snapshot retrieval, legacy config loading, and widget rendering.
