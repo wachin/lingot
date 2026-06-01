@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -89,12 +90,7 @@ class ConfigDialog(QDialog):
         form.setContentsMargins(9, 9, 9, 9)
         form.setSpacing(9)
 
-        header = QLabel(_("Select the audio source:"))
-        header.setAlignment(
-            self.style().layoutDirection() == self.layoutDirection()
-            and 0  # AlignLeft
-        )
-        header.setStyleSheet("font-weight: bold;")
+        header = QLabel("<b>" + _("Select the audio source:") + "</b>")
         form.addRow(header)
 
         self.audio_system = QComboBox()

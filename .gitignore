@@ -70,3 +70,29 @@ py-compile
 .aider.tags.cache.v4
 .codex
 .aider.input.history
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python packaging
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+
+# Python caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# PyQt6 build artifacts
+*.pyd
