@@ -379,8 +379,11 @@ Comprehensive test suite in `pyqt6_lingot/test/test_bindings.py` (32 tests) cove
 
 [x] Add GUI smoke tests where practical.
 
-Implemented in `pyqt6_lingot/test/test_widgets.py` covering all three custom
-drawing widgets with offscreen rendering.
+Implemented in `pyqt6_lingot/test/test_widgets.py` (27+ tests) covering:
+- Widget rendering: GaugeWidget, SpectrumWidget, StrobeDiscWidget offscreen paint
+- MainWindow: construction, menus, gauge/strobe toggle, spectrum toggle, status bar
+- ConfigDialog: construction, all 4 tabs, tab widgets (audio, sliders, FFT, scale table)
+- Tests require liblingot.so are skipped gracefully
 
 [ ] Manually verify audio backends.
 
