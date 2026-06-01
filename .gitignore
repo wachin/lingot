@@ -66,3 +66,7 @@ po/Rules-quot
 po/Makevars.template
 po/@*
 py-compile
+
+.aider.tags.cache.v4
+.codex
+.aider.input.history

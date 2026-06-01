@@ -74,35 +74,35 @@ class MainWindow(QMainWindow):
         self._build_timers()
 
     def _build_actions(self) -> None:
-        file_menu = self.menuBar().addMenu("&File")
-        self.open_action = QAction("&Open Configuration...", self)
-        self.save_action = QAction("&Save Configuration...", self)
-        self.quit_action = QAction("&Quit", self)
+        file_menu = self.menuBar().addMenu(_("&File"))
+        self.open_action = QAction(_("&Open Configuration..."), self)
+        self.save_action = QAction(_("&Save Configuration..."), self)
+        self.quit_action = QAction(_("&Quit"), self)
         file_menu.addAction(self.open_action)
         file_menu.addAction(self.save_action)
         file_menu.addSeparator()
         file_menu.addAction(self.quit_action)
 
-        edit_menu = self.menuBar().addMenu("&Edit")
-        self.preferences_action = QAction("&Preferences...", self)
+        edit_menu = self.menuBar().addMenu(_("&Edit"))
+        self.preferences_action = QAction(_("&Preferences..."), self)
         edit_menu.addAction(self.preferences_action)
 
-        view_menu = self.menuBar().addMenu("&View")
+        view_menu = self.menuBar().addMenu(_("&View"))
         mode_group = QActionGroup(self)
-        self.gauge_action = QAction("&Gauge", self, checkable=True)
-        self.strobe_action = QAction("&Strobe Disc", self, checkable=True)
+        self.gauge_action = QAction(_("&Gauge"), self, checkable=True)
+        self.strobe_action = QAction(_("&Strobe Disc"), self, checkable=True)
         self.gauge_action.setChecked(True)
         mode_group.addAction(self.gauge_action)
         mode_group.addAction(self.strobe_action)
-        self.spectrum_action = QAction("&Spectrum", self, checkable=True)
+        self.spectrum_action = QAction(_("&Spectrum"), self, checkable=True)
         self.spectrum_action.setChecked(True)
         view_menu.addAction(self.gauge_action)
         view_menu.addAction(self.strobe_action)
         view_menu.addSeparator()
         view_menu.addAction(self.spectrum_action)
 
-        help_menu = self.menuBar().addMenu("&Help")
-        self.about_action = QAction("&About", self)
+        help_menu = self.menuBar().addMenu(_("&Help"))
+        self.about_action = QAction(_("&About"), self)
         help_menu.addAction(self.about_action)
 
         self.quit_action.triggered.connect(self.close)
@@ -196,10 +196,10 @@ class MainWindow(QMainWindow):
 
     def _refresh_snapshot(self) -> None:
         if self.context is None:
-            self.frequency_label.setText("engine offline")
+            self.frequency_label.setText(_("engine offline"))
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
-            self._set_status("Engine offline")
+            self._set_status(_("Engine offline"))
             return
 
         self.current_snapshot = self.context.snapshot()
@@ -212,20 +212,20 @@ class MainWindow(QMainWindow):
             self.spectrum.set_samples(self.context.spectrum(self.current_snapshot.spectrum_size))
 
         if not self.current_snapshot.running:
-            self.frequency_label.setText("not running")
+            self.frequency_label.setText(_("not running"))
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
-            self._set_status(f"Engine stopped - {self._config_status_text()}")
+            self._set_status(_("Engine stopped") + f" - {self._config_status_text()}")
         elif self.current_snapshot.has_pitch:
             self.frequency_label.setText(f"{self.current_snapshot.frequency:.2f} Hz")
             self.tone_label.setText(self.current_snapshot.note_name or "--")
             self.error_label.setText(f"{self.current_snapshot.error_cents:+.2f} cents")
-            self._set_status(f"Listening - {self._config_status_text()}")
+            self._set_status(_("Listening") + f" - {self._config_status_text()}")
         else:
             self.frequency_label.setText("-- Hz")
             self.tone_label.setText("--")
             self.error_label.setText("-- cents")
-            self._set_status(f"Listening - {self._config_status_text()}")
+            self._set_status(_("Listening") + f" - {self._config_status_text()}")
 
     def _dispatch_messages(self) -> None:
         if self.context is None:
@@ -236,11 +236,11 @@ class MainWindow(QMainWindow):
                 return
             msg_type, _error_code, text = message
             if msg_type == 0:
-                QMessageBox.critical(self, "Error", text)
+                QMessageBox.critical(self, _("Error"), text)
             elif msg_type == 1:
-                QMessageBox.warning(self, "Warning", text)
+                QMessageBox.warning(self, _("Warning"), text)
             elif msg_type == 2:
-                QMessageBox.information(self, "Info", text)
+                QMessageBox.information(self, _("Info"), text)
 
     def _set_gauge_mode(self) -> None:
         self.show_gauge = True
@@ -254,14 +254,14 @@ class MainWindow(QMainWindow):
 
     def _open_config(self) -> None:
         if self.context is None:
-            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            QMessageBox.warning(self, "Lingot", _("The Lingot engine is not available."))
             return
 
         filename, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "Open Configuration File",
+            _("Open Configuration File"),
             self.config_filename or "",
-            "Lingot configuration files (*.conf)",
+            _("Lingot configuration files (*.conf)"),
         )
         if not filename:
             return
@@ -272,20 +272,20 @@ class MainWindow(QMainWindow):
             self.config_filename = filename
             self._sync_config_dependent_widgets()
             self._update_engine_status()
-            self._show_temporary_status(f"Loaded configuration: {self._config_display_name()}")
+            self._show_temporary_status(_("Loaded configuration") + f": {self._config_display_name()}")
         except LingotLibraryError as exc:
             QMessageBox.warning(self, "Lingot", str(exc))
 
     def _save_config(self) -> None:
         if self.context is None:
-            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            QMessageBox.warning(self, "Lingot", _("The Lingot engine is not available."))
             return
 
         filename, _selected_filter = QFileDialog.getSaveFileName(
             self,
-            "Save Configuration File",
+            _("Save Configuration File"),
             self.config_filename or "",
-            "Lingot configuration files (*.conf)",
+            _("Lingot configuration files (*.conf)"),
         )
         if not filename:
             return
@@ -296,36 +296,37 @@ class MainWindow(QMainWindow):
             self.context.save_config(filename)
             self.config_filename = filename
             self._update_engine_status()
-            self._show_temporary_status(f"Saved configuration: {self._config_display_name()}")
+            self._show_temporary_status(_("Saved configuration") + f": {self._config_display_name()}")
         except LingotLibraryError as exc:
             QMessageBox.warning(self, "Lingot", str(exc))
 
     def _preferences(self) -> None:
         if self.context is None:
-            QMessageBox.warning(self, "Lingot", "The Lingot engine is not available.")
+            QMessageBox.warning(self, "Lingot", _("The Lingot engine is not available."))
             return
         dialog = ConfigDialog(self.context, self, ui_settings=self.ui_settings)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             self._sync_config_dependent_widgets()
             self._update_engine_status()
-            self._show_temporary_status("Preferences applied")
+            self._show_temporary_status(_("Preferences applied"))
 
     def _about(self) -> None:
         QMessageBox.about(
             self,
-            f"About {APP_DISPLAY_NAME}",
+            _("About") + f" {APP_DISPLAY_NAME}",
             (
                 f"<h3>{APP_DISPLAY_NAME} {APP_VERSION}</h3>"
                 f"<p>{APP_SUMMARY}.</p>"
-                "<p>Lingot is an accurate and easy to use musical instrument tuner. "
+                + _("<p>Lingot is an accurate and easy to use musical instrument tuner. "
                 "This frontend reuses the existing C engine for audio capture, "
                 "pitch detection, FFT analysis, configuration files, UI settings, "
-                "and Scala scale support.</p>"
-                f"<p>{APP_COPYRIGHT}</p>"
-                f"<p>Authors:<br>{'<br>'.join(APP_AUTHORS)}</p>"
+                "and Scala scale support.</p>")
+                + f"<p>{APP_COPYRIGHT}</p>"
+                + _("<p>Authors:</p>")
+                + f"<p>{'<br>'.join(APP_AUTHORS)}</p>"
                 f"<p><a href=\"{APP_WEBSITE}\">{APP_WEBSITE}</a><br>"
                 f"<a href=\"{APP_BUGTRACKER}\">{APP_BUGTRACKER}</a></p>"
-                "<p>License: GPL-2.0-or-later</p>"
+                + _("<p>License: GPL-2.0-or-later</p>")
             ),
         )
 
@@ -374,9 +375,9 @@ class MainWindow(QMainWindow):
 
     def _update_engine_status(self) -> None:
         if self.context is None:
-            self._set_status("Engine offline")
+            self._set_status(_("Engine offline"))
         else:
-            self._set_status(f"Starting - {self._config_status_text()}")
+            self._set_status(_("Starting") + f" - {self._config_status_text()}")
 
     def _sync_config_dependent_widgets(self) -> None:
         if self.context is None:

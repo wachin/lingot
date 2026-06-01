@@ -20,3 +20,6 @@ src/lingot-io-config-scale.c
 src/lingot-io-config.c
 src/lingot-msg.c
 src/lingot.c
+pyqt6_lingot/app.py
+pyqt6_lingot/config_dialog.py
+pyqt6_lingot/main_window.py
