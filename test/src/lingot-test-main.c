@@ -29,6 +29,16 @@ void lingot_test_config_scale(void);
 void lingot_test_signal(void);
 void lingot_test_core(void);
 void lingot_test_filter(void);
+void lingot_test_pyqt_api_initialize(void);
+void lingot_test_pyqt_api_context_lifecycle(void);
+void lingot_test_pyqt_api_config_values(void);
+void lingot_test_pyqt_api_snapshot(void);
+void lingot_test_pyqt_api_spectrum(void);
+void lingot_test_pyqt_api_scale(void);
+void lingot_test_pyqt_api_audio_systems(void);
+void lingot_test_pyqt_api_config_filename(void);
+void lingot_test_pyqt_api_ui_settings(void);
+void lingot_test_pyqt_api_null_safety(void);
 
 #ifndef LINGOT_TEST_USE_LIB
 
@@ -91,15 +101,25 @@ int main(void) {
         return CU_get_error();
     }
 
-    /* add the tests to the suite */
-    /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
-    if ( //
-         (NULL == CU_add_test(pSuite, "lingot_config", lingot_test_io_config)) || //
-         (NULL == CU_add_test(pSuite, "lingot_config_scale", lingot_test_config_scale)) || //
-         (NULL == CU_add_test(pSuite, "lingot_signal", lingot_test_signal)) || //
-         (NULL == CU_add_test(pSuite, "lingot_core", lingot_test_core)) || //
-         (NULL == CU_add_test(pSuite, "lingot_filter", lingot_test_filter)) || //
-         0) {
+     /* add the tests to the suite */
+     /* NOTE - ORDER IS IMPORTANT - MUST TEST fread() AFTER fprintf() */
+     if ( //
+          (NULL == CU_add_test(pSuite, "lingot_config", lingot_test_io_config)) || //
+          (NULL == CU_add_test(pSuite, "lingot_config_scale", lingot_test_config_scale)) || //
+          (NULL == CU_add_test(pSuite, "lingot_signal", lingot_test_signal)) || //
+          (NULL == CU_add_test(pSuite, "lingot_core", lingot_test_core)) || //
+          (NULL == CU_add_test(pSuite, "lingot_filter", lingot_test_filter)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_initialize", lingot_test_pyqt_api_initialize)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_context_lifecycle", lingot_test_pyqt_api_context_lifecycle)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_config_values", lingot_test_pyqt_api_config_values)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_snapshot", lingot_test_pyqt_api_snapshot)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_spectrum", lingot_test_pyqt_api_spectrum)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_scale", lingot_test_pyqt_api_scale)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_audio_systems", lingot_test_pyqt_api_audio_systems)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_config_filename", lingot_test_pyqt_api_config_filename)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_ui_settings", lingot_test_pyqt_api_ui_settings)) || //
+          (NULL == CU_add_test(pSuite, "lingot_pyqt_api_null_safety", lingot_test_pyqt_api_null_safety)) || //
+          0) {
         CU_cleanup_registry();
         return CU_get_error();
     }

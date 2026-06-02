@@ -104,7 +104,11 @@ Options:
 - Add a small CMake or Meson side build only for the Python frontend.
 - Keep `libtool` output and document `LD_LIBRARY_PATH` for development.
 
-[ ] Add C tests for the new wrapper API before wiring PyQt6 to it.
+[x] Add C tests for the new wrapper API before wiring PyQt6 to it.
+
+Implemented in `test/src/lingot-test-pyqt-api.c` (10 tests):
+- Initialization, context lifecycle, config values, snapshot, spectrum
+- Scale info, audio systems, config filename, UI settings, null safety
 
 ## Phase 2: Create The PyQt6 Application Skeleton
 
@@ -469,6 +473,6 @@ Mitigation: defer pure-Python DSP/audio until the PyQt6 frontend is already prov
 
 [x] Verify the frontend can launch, close, and cleanly stop the C core.
 
-Verified: 46 tests pass (32 bindings + 14 widget smoke tests) including
+Verified: 56+ tests pass (32 bindings + 14 widget smoke tests + 10 C API tests) including
 context create/start/stop/destroy cycles, config load/save, scale read/write,
-snapshot retrieval, legacy config loading, and widget rendering.
+snapshot retrieval, legacy config loading, widget rendering, and C API wrapper coverage.

@@ -239,7 +239,8 @@ EXTRA_DIST = \
   test/resources/lingot-001.conf \
   test/resources/lingot-0_9_2b8.conf \
   test/resources/lingot-1_0_2b.conf \
-  test/resources/lingot-1_1_0.conf
+  test/resources/lingot-1_1_0.conf \
+  test/src/lingot-test-pyqt-api.c
 
 ######################################################################
 # 15 support for test suites
@@ -265,6 +266,7 @@ lingot_test_SOURCES = \
   test/src/lingot-test-filter.c \
   test/src/lingot-test-io-config.c \
   test/src/lingot-test-main.c \
+  test/src/lingot-test-pyqt-api.c \
   test/src/lingot-test-signal.c \
   test/src/lingot-test.c \
   test/src/lingot-test.h
