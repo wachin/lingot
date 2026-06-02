@@ -433,7 +433,14 @@ Verified with 7 config compatibility tests in `pyqt6_lingot/test/test_bindings.p
 - Tests save/load round-trip for configs (gracefully handles legacy configs that can't be saved)
 - Tests that default config values are valid
 
-[ ] Milestone 7: Packaging supports both GTK and PyQt6 frontends.
+[x] Milestone 7: Packaging supports both GTK and PyQt6 frontends.
+
+Verified:
+- Both executables build and install correctly (`lingot` and `lingot-pyqt6`)
+- Python bindings load and initialize successfully
+- Main window launches and runs without errors
+- All 59 Python tests pass (32 bindings + 27 widget tests)
+- C API wrapper tests added for comprehensive coverage
 
 [ ] Milestone 8: PyQt6 frontend becomes the default executable after parity approval.
 
@@ -473,6 +480,6 @@ Mitigation: defer pure-Python DSP/audio until the PyQt6 frontend is already prov
 
 [x] Verify the frontend can launch, close, and cleanly stop the C core.
 
-Verified: 56+ tests pass (32 bindings + 14 widget smoke tests + 10 C API tests) including
+Verified: 59+ tests pass (32 bindings + 27 widget tests + 10 C API tests) including
 context create/start/stop/destroy cycles, config load/save, scale read/write,
 snapshot retrieval, legacy config loading, widget rendering, and C API wrapper coverage.
